@@ -8,6 +8,8 @@ import { Code } from './Error/type'
 export type Pino = PinoLogger<never, boolean>
 export type Request = Request
 
+export type RequestInfo = Request
+
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
 export interface StoreData {

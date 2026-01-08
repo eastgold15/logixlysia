@@ -133,7 +133,7 @@ export type {
   Transport,
 } from './interfaces'
 
-export { HttpError } from './interfaces'
+export { HttpError } from './Error/errors'
 export { toProblemJson, formatProblemJsonLog } from './utils/handle-error'
 export type { ProblemJson } from './utils/handle-error'
 
