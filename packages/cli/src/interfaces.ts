@@ -2,8 +2,11 @@ import type {
   Logger as PinoLogger,
   LoggerOptions as PinoLoggerOptions
 } from 'pino'
+import { ProblemError } from './Error/errors'
+import { Code } from './Error/type'
 
 export type Pino = PinoLogger<never, boolean>
+export type Request = Request
 
 export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
@@ -43,6 +46,10 @@ export interface LogRotationConfig {
   compression?: 'gzip'
 }
 
+
+
+
+
 export interface Options {
   config?: {
     showStartupMessage?: boolean
@@ -64,7 +71,18 @@ export interface Options {
 
     // Pino
     pino?: (PinoLoggerOptions & { prettyPrint?: boolean }) | undefined
+  
+    error?:{ 
+     problemJson?:{ 
+      typeBaseUrl?: string
+    }
+    }
+
   }
+
+ transform?: (error: unknown, context: { request: Request; code: Code }) => ProblemError | unknown
+
+ 
 }
 
 export class HttpError extends Error {
@@ -80,32 +98,33 @@ export interface Logger {
   pino: Pino
   log: (
     level: LogLevel,
-    request: RequestInfo,
+    request: Request,
     data: Record<string, unknown>,
     store: StoreData
   ) => void
   handleHttpError: (
-    request: RequestInfo,
-    error: unknown,
-    store: StoreData
+    request: Request,
+    error: ProblemError,
+    store: StoreData,
+    options: Options
   ) => void
   debug: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void
   info: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void
   warn: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void
   error: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void

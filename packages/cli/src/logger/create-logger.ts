@@ -4,8 +4,8 @@ import type {
   LogLevel,
   Options,
   Pino,
-  RequestInfo,
-  StoreData
+  StoreData,
+ 
 } from '../interfaces'
 
 const pad2 = (value: number): string => String(value).padStart(2, '0')
@@ -43,7 +43,7 @@ const formatTimestamp = (date: Date, pattern?: string): string => {
     .replaceAll('SSS', SSS)
 }
 
-const getIp = (request: RequestInfo): string => {
+const getIp = (request: Request): string => {
   const forwarded = request.headers.get('x-forwarded-for')
   if (forwarded) {
     return forwarded.split(',')[0]?.trim() ?? ''
@@ -171,7 +171,7 @@ export const formatLine = ({
   options
 }: {
   level: LogLevel
-  request: RequestInfo
+  request: Request
   data: Record<string, unknown>
   store: StoreData
   options: Options

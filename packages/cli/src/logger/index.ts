@@ -4,7 +4,6 @@ import type {
   LogLevel,
   Options,
   Pino,
-  RequestInfo,
   StoreData
 } from '../interfaces'
 import { logToTransports } from '../output'
@@ -43,7 +42,7 @@ export const createLogger = (options: Options = {}): Logger => {
 
   const log = (
     level: LogLevel,
-    request: RequestInfo,
+    request: Request,
     data: Record<string, unknown>,
     store: StoreData
   ): void => {
@@ -96,7 +95,7 @@ export const createLogger = (options: Options = {}): Logger => {
 
   const logWithContext = (
     level: LogLevel,
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ): void => {

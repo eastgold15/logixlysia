@@ -101,32 +101,32 @@ type Logger = {
   pino: Pino
   log: (
     level: LogLevel,
-    request: RequestInfo,
+    request: Request,
     data: Record<string, unknown>,
     store: StoreData
   ) => void
   handleHttpError: (
-    request: RequestInfo,
+    request: Request,
     error: unknown,
     store: StoreData
   ) => void
   debug: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void
   info: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void
   warn: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void
   error: (
-    request: RequestInfo,
+    request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void

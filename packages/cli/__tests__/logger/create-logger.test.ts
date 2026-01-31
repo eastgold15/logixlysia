@@ -76,7 +76,16 @@ describe('createLogger', () => {
     const request = createMockRequest('http://localhost/test')
     const store = { beforeTime: BigInt(0) }
 
-    logger.handleHttpError(request, { status: 400, message: 'bad' }, store)
+     const problemError = {
+    status: 400,
+    message: 'bad',
+    title: 'Bad Request',
+    type: 'https://httpstatuses.com/400',
+    name: 'ProblemError',
+    toJSON: () => ({ status: 400, message: 'bad', title: 'Bad Request', type: 'https://httpstatuses.com/400' })
+  }
+
+    logger.handleHttpError(request, problemError, store, options)
 
     expect(transport).toHaveBeenCalledTimes(1)
     const [levelValue] = transport.mock.calls[0] ?? [undefined]

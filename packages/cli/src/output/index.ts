@@ -1,8 +1,8 @@
-import type { LogLevel, Options, RequestInfo, StoreData } from '../interfaces'
+import type { LogLevel, Options, Request, StoreData } from '../interfaces'
 
 interface LogToTransportsInput {
   level: LogLevel
-  request: RequestInfo
+  request: Request
   data: Record<string, unknown>
   store: StoreData
   options: Options
@@ -11,7 +11,7 @@ interface LogToTransportsInput {
 export const logToTransports = (
   ...args:
     | [LogToTransportsInput]
-    | [LogLevel, RequestInfo, Record<string, unknown>, StoreData, Options]
+    | [LogLevel, Request, Record<string, unknown>, StoreData, Options]
 ): void => {
   const input: LogToTransportsInput =
     typeof args[0] === 'string'

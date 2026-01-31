@@ -2,6 +2,7 @@ import { Elysia, type SingletonBase } from 'elysia'
 import { startServer } from './extensions'
 import type { LogixlysiaStore, Options } from './interfaces'
 import { createLogger } from './logger'
+import { normalizeToProblem } from './utils/handle-error'
 
 export type Logixlysia = Elysia<
   'Logixlysia',
@@ -84,8 +85,37 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
 
         logger.log(level, request, { status }, store)
       })
-      .onError(({ request, error, store }) => {
-        logger.handleHttpError(request, error, store)
+      .onError(({ request, error,code, path,store,set }) => {
+        // logger.handleHttpError(request, error, store)
+
+        // ==========================================
+  // Phase 1: Transform (转换)
+  // ==========================================
+  let result = options.transform ? options.transform(error, { request, code }) : error
+
+  // ==========================================
+  // Phase 2: Normalization (规范化)
+  // ==========================================
+  // 统一转为 ProblemError 实例
+  const problem = normalizeToProblem(result, code, path, options.config?.error?.problemJson?.typeBaseUrl)
+
+  // ==========================================
+  // Phase 3: Logging (日志)
+  // ==========================================
+  // 调用上面改造后的函数，它现在只负责记录，不负责逻辑判断
+  logger.handleHttpError(request, problem, store, options)
+
+  // ==========================================
+  // Phase 4: Response (响应)
+  // ==========================================
+  // 统一设置 Header 和 Status
+  set.status = problem.status
+  set.headers['content-type'] = 'application/problem+json'
+
+  // 返回符合 RFC 标准的 JSON
+  return problem.toJSON()
+
+
       })
       // Ensure plugin lifecycle hooks (onRequest/onAfterHandle/onError) apply to the parent app.
       .as('scoped') as unknown as Logixlysia
@@ -100,7 +130,12 @@ export type {
   Options,
   Pino,
   StoreData,
-  Transport
+  Transport,
 } from './interfaces'
 
+export { HttpError } from './interfaces'
+export { toProblemJson, formatProblemJsonLog } from './utils/handle-error'
+export type { ProblemJson } from './utils/handle-error'
+
 export default logixlysia
+
