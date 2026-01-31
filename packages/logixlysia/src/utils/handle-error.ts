@@ -3,9 +3,8 @@
  * @see https://www.rfc-editor.org/rfc/rfc9457.html
  */
 
-import { ProblemError } from "../Error/errors";
-import { Code } from "../Error/type";
-
+import { ProblemError } from '../Error/errors'
+import type { Code } from '../Error/type'
 
 /**
  * 默认的状态码与标题映射表 (RFC 标准推荐)
@@ -18,62 +17,64 @@ const DEFAULT_TITLES: Record<number, string> = {
   409: 'Conflict',
   422: 'Unprocessable Entity',
   500: 'Internal Server Error',
-  503: 'Service Unavailable',
-};
+  503: 'Service Unavailable'
+}
 
 export const normalizeToProblem = (
   error: any,
   code: Code,
   path: string,
-  typeBaseUrl: string = 'about:blank'
+  typeBaseUrl = 'about:blank'
 ): ProblemError => {
   // 1. 如果已经是 ProblemError，直接补充 instance 并返回
   if (error instanceof ProblemError) {
     // 如果没有 instance，自动补全为当前请求路径
-    return error.instance ? error : new ProblemError(
-      error.type,
-      error.title,
-      error.status,
-      error.detail,
-      path,
-      error.extensions
-    );
+    return error.instance
+      ? error
+      : new ProblemError(
+          error.type,
+          error.title,
+          error.status,
+          error.detail,
+          path,
+          error.extensions
+        )
   }
 
   // 2. 初始化默认值
-  let status = 500;
-  let title = 'Internal Server Error';
-  let detail = error instanceof Error ? error.message : String(error);
-  let extensions: Record<string, unknown> = {};
+  let status = 500
+  let title = 'Internal Server Error'
+  let detail = error instanceof Error ? error.message : String(error)
+  let extensions: Record<string, unknown> = {}
 
   // 3. 识别 Elysia 内置错误码并“对齐”标准
   switch (code) {
     case 'VALIDATION':
-      status = 400;
-      title = 'Validation Failed';
+      status = 400
+      title = 'Validation Failed'
       // 提取 Elysia 的校验细节
-      extensions = { errors: error.all || [] };
-      break;
+      extensions = { errors: error.all || [] }
+      break
     case 'NOT_FOUND':
-      status = 404;
-      title = 'Resource Not Found';
-      break;
+      status = 404
+      title = 'Resource Not Found'
+      break
     case 'PARSE':
-      status = 400;
-      title = 'Invalid Payload';
-      detail = 'The request body could not be parsed as valid JSON.';
-      break;
+      status = 400
+      title = 'Invalid Payload'
+      detail = 'The request body could not be parsed as valid JSON.'
+      break
     case 'INVALID_COOKIE_SIGNATURE':
-      status = 401;
-      title = 'Invalid Credentials';
-      break;
+      status = 401
+      title = 'Invalid Credentials'
+      break
     default:
       // 如果错误对象本身带有状态码（比如某些库抛出的）
       if (typeof error?.status === 'number') {
-        status = error.status;
-        title = DEFAULT_TITLES[status] || 'Unknown Error';
+        status = error.status
+        title = DEFAULT_TITLES[status] || 'Unknown Error'
       }
-      break;
+      break
   }
 
   // 4. 构造并返回标准的 ProblemError
@@ -84,9 +85,8 @@ export const normalizeToProblem = (
     detail,
     path,
     extensions
-  );
-};
-
+  )
+}
 
 export interface ProblemJson {
   type?: string
@@ -116,9 +116,7 @@ export interface ProblemJsonOptions {
   format?: (error: unknown, request: Request) => ProblemJson | null
 }
 
-const isErrorWithStatus = (
-  value: unknown
-): value is { status: number } =>
+const isErrorWithStatus = (value: unknown): value is { status: number } =>
   typeof value === 'object' &&
   value !== null &&
   'status' in value &&
@@ -251,9 +249,7 @@ export function formatProblemJsonLog(
   // 标题行
   const statusStr = problem.status.toString()
   const emoji = getStatusEmoji(problem.status)
-  parts.push(
-    `\n${emoji} [HTTP ${statusStr}] ${request.method} ${url.pathname}`
-  )
+  parts.push(`\n${emoji} [HTTP ${statusStr}] ${request.method} ${url.pathname}`)
 
   // Problem JSON 内容
   parts.push(`  Type:    ${problem.type}`)
@@ -267,8 +263,7 @@ export function formatProblemJsonLog(
 
   // 扩展字段
   const extensions = Object.entries(problem).filter(
-    ([key]) =>
-      !['type', 'title', 'status', 'detail', 'instance'].includes(key)
+    ([key]) => !['type', 'title', 'status', 'detail', 'instance'].includes(key)
   )
   if (extensions.length > 0) {
     parts.push('  Extensions:')

@@ -76,14 +76,19 @@ describe('createLogger', () => {
     const request = createMockRequest('http://localhost/test')
     const store = { beforeTime: BigInt(0) }
 
-     const problemError = {
-    status: 400,
-    message: 'bad',
-    title: 'Bad Request',
-    type: 'https://httpstatuses.com/400',
-    name: 'ProblemError',
-    toJSON: () => ({ status: 400, message: 'bad', title: 'Bad Request', type: 'https://httpstatuses.com/400' })
-  }
+    const problemError = {
+      status: 400,
+      message: 'bad',
+      title: 'Bad Request',
+      type: 'https://httpstatuses.com/400',
+      name: 'ProblemError',
+      toJSON: () => ({
+        status: 400,
+        message: 'bad',
+        title: 'Bad Request',
+        type: 'https://httpstatuses.com/400'
+      })
+    }
 
     logger.handleHttpError(request, problemError, store, options)
 

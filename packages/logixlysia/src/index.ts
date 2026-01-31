@@ -85,43 +85,49 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
 
         logger.log(level, request, { status }, store)
       })
-      .onError(({ request, error,code, path,store,set }) => {
+      .onError(({ request, error, code, path, store, set }) => {
         // logger.handleHttpError(request, error, store)
 
         // ==========================================
-  // Phase 1: Transform (转换)
-  // ==========================================
-  let result = options.transform ? options.transform(error, { request, code }) : error
+        // Phase 1: Transform (转换)
+        // ==========================================
+        const result = options.transform
+          ? options.transform(error, { request, code })
+          : error
 
-  // ==========================================
-  // Phase 2: Normalization (规范化)
-  // ==========================================
-  // 统一转为 ProblemError 实例
-  const problem = normalizeToProblem(result, code, path, options.config?.error?.problemJson?.typeBaseUrl)
+        // ==========================================
+        // Phase 2: Normalization (规范化)
+        // ==========================================
+        // 统一转为 ProblemError 实例
+        const problem = normalizeToProblem(
+          result,
+          code,
+          path,
+          options.config?.error?.problemJson?.typeBaseUrl
+        )
 
-  // ==========================================
-  // Phase 3: Logging (日志)
-  // ==========================================
-  // 调用上面改造后的函数，它现在只负责记录，不负责逻辑判断
-  logger.handleHttpError(request, problem, store, options)
+        // ==========================================
+        // Phase 3: Logging (日志)
+        // ==========================================
+        // 调用上面改造后的函数，它现在只负责记录，不负责逻辑判断
+        logger.handleHttpError(request, problem, store, options)
 
-  // ==========================================
-  // Phase 4: Response (响应)
-  // ==========================================
-  // 统一设置 Header 和 Status
-  set.status = problem.status
-  set.headers['content-type'] = 'application/problem+json'
+        // ==========================================
+        // Phase 4: Response (响应)
+        // ==========================================
+        // 统一设置 Header 和 Status
+        set.status = problem.status
+        set.headers['content-type'] = 'application/problem+json'
 
-  // 返回符合 RFC 标准的 JSON
-  return problem.toJSON()
-
-
+        // 返回符合 RFC 标准的 JSON
+        return problem.toJSON()
       })
       // Ensure plugin lifecycle hooks (onRequest/onAfterHandle/onError) apply to the parent app.
       .as('scoped') as unknown as Logixlysia
   )
 }
 
+export { HttpError } from './Error/errors'
 export type {
   Logger,
   LogixlysiaContext,
@@ -130,12 +136,9 @@ export type {
   Options,
   Pino,
   StoreData,
-  Transport,
+  Transport
 } from './interfaces'
-
-export { HttpError } from './Error/errors'
-export { toProblemJson, formatProblemJsonLog } from './utils/handle-error'
 export type { ProblemJson } from './utils/handle-error'
+export { formatProblemJsonLog, toProblemJson } from './utils/handle-error'
 
 export default logixlysia
-

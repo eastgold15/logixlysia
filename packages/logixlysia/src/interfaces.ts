@@ -2,11 +2,11 @@ import type {
   Logger as PinoLogger,
   LoggerOptions as PinoLoggerOptions
 } from 'pino'
-import { ProblemError } from './Error/errors'
-import { Code } from './Error/type'
+import type { ProblemError } from './Error/errors'
+import type { Code } from './Error/type'
 
 export type Pino = PinoLogger<never, boolean>
-export type Request = Request
+
 
 export type RequestInfo = Request
 
@@ -80,18 +80,18 @@ export interface Options {
 
     // Pino
     pino?: (PinoLoggerOptions & { prettyPrint?: boolean }) | undefined
-  
-    error?:{ 
-     problemJson?:{ 
-      typeBaseUrl?: string
-    }
-    }
 
+    error?: {
+      problemJson?: {
+        typeBaseUrl?: string
+      }
+    }
   }
 
- transform?: (error: unknown, context: { request: Request; code: Code }) => ProblemError | unknown
-
- 
+  transform?: (
+    error: unknown,
+    context: { request: Request; code: Code }
+  ) => ProblemError | unknown
 }
 
 export class HttpError extends Error {

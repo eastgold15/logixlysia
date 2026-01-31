@@ -1,12 +1,11 @@
 import pino from 'pino'
 import type {
+  LogFilter,
   Logger,
   LogLevel,
   Options,
   Pino,
-  RequestInfo,
-  StoreData,
-  LogFilter
+  StoreData
 } from '../interfaces'
 import { logToTransports } from '../output'
 import { logToFile } from '../output/file'

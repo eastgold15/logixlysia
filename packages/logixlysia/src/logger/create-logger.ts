@@ -1,12 +1,6 @@
 import chalk from 'chalk'
 import { getStatusCode } from '../helpers/status'
-import type {
-  LogLevel,
-  Options,
-  Pino,
-  StoreData,
- 
-} from '../interfaces'
+import type { LogLevel, Options, Pino, StoreData } from '../interfaces'
 
 const pad2 = (value: number): string => String(value).padStart(2, '0')
 const pad3 = (value: number): string => String(value).padStart(3, '0')
