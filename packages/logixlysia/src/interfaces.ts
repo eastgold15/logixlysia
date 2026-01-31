@@ -90,18 +90,11 @@ export interface Options {
 
   transform?: (
     error: unknown,
-    context: { request: Request; code: Code }
+    context: { request: Request; code: Code, path: string }
   ) => ProblemError | unknown
 }
 
-export class HttpError extends Error {
-  readonly status: number
 
-  constructor(status: number, message: string) {
-    super(message)
-    this.status = status
-  }
-}
 
 export interface Logger {
   pino: Pino

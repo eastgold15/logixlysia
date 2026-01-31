@@ -92,7 +92,7 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
         // Phase 1: Transform (转换)
         // ==========================================
         const result = options.transform
-          ? options.transform(error, { request, code })
+          ? options.transform(error, { request, code, path })
           : error
 
         // ==========================================
