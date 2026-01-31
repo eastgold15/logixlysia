@@ -1,6 +1,6 @@
 {
   "name": "@pori15/logixlysia",
-  "version": "6.0.1",
+  "version": "6.0.2",
   "description": "🦊 Logixlysia is a logger for Elysia",
   "type": "module",
   "main": "dist/index.js",
@@ -16,7 +16,7 @@
     "test:coverage": "bun test --coverage --coverage-reporter=lcov",
     "clean": "git clean -fdx .turbo dist node_modules coverage",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "release": "bun publish --access public"
+    "release": "bun pm version patch && bun  publish --access public"
   },
   "author": "Noppakorn Kaewsalabnil <hello@pungrumpy.com>",
   "bugs": {
