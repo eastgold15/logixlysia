@@ -127,7 +127,27 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
   )
 }
 
-export { HttpError } from './Error/errors'
+// ==========================================
+// Error Exports
+// ==========================================
+export { HttpError, ProblemError } from './Error/errors'
+export type { ProblemDocument } from './Error/errors'
+export type {
+  Code,
+  HttpErrorType,
+  ErrorContext,
+  HttpProblemJsonOptions
+} from './Error/type'
+export { normalizeToProblem } from './utils/handle-error'
+export type {
+  ProblemJson,
+  ProblemJsonOptions
+} from './utils/handle-error'
+export { formatProblemJsonLog, toProblemJson } from './utils/handle-error'
+
+// ==========================================
+// Core Exports
+// ==========================================
 export type {
   Logger,
   LogixlysiaContext,
@@ -138,7 +158,5 @@ export type {
   StoreData,
   Transport
 } from './interfaces'
-export type { ProblemJson } from './utils/handle-error'
-export { formatProblemJsonLog, toProblemJson } from './utils/handle-error'
 
 export default logixlysia
