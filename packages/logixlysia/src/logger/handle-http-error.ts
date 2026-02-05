@@ -26,7 +26,7 @@ export const handleHttpError = (
     const filePath = config?.logFilePath
     if (filePath) {
       logToFile({ filePath, level, request, data, store, options }).catch(
-        () => {}
+        () => { }
       )
     }
   }
@@ -57,4 +57,35 @@ export const handleHttpError = (
   console.error(
     `${timestamp}${level} ${method} ${path} ${problem.status} - ${problem.title}`
   )
+
+  // 如果启用了详细错误日志，打印完整的错误信息
+  if (config?.error?.verboseErrorLogging) {
+    const json = problem.toJSON()
+
+    // 打印 detail
+    if (json.detail) {
+      console.error(`  Detail: ${json.detail}`)
+    }
+
+    // 打印 instance
+    if (json.instance) {
+      console.error(`  Instance: ${json.instance}`)
+    }
+
+    // 打印 type
+    if (json.type && json.type !== 'about:blank') {
+      console.error(`  Type: ${json.type}`)
+    }
+
+    // 打印扩展字段（如 validation errors）
+    const extensions = Object.entries(json).filter(
+      ([key]) => !['type', 'title', 'status', 'detail', 'instance'].includes(key)
+    )
+    if (extensions.length > 0) {
+      console.error('  Extensions:')
+      for (const [key, value] of extensions) {
+        console.error(`    ${key}:`, value)
+      }
+    }
+  }
 }

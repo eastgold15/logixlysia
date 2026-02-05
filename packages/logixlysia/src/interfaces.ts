@@ -85,6 +85,12 @@ export interface Options {
       problemJson?: {
         typeBaseUrl?: string
       }
+      /**
+       * 是否在控制台显示完整的错误详情（包括 detail 和 extensions）
+       * 开启后会将完整的错误对象打印到控制台，便于调试
+       * @default false
+       */
+      verboseErrorLogging?: boolean
     }
   }
 

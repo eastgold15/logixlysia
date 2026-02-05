@@ -241,7 +241,23 @@ class GatewayTimeout extends ProblemError {
   }
 }
 
-export const HttpError = {
+export interface HttpErrorConstructor {
+  BadRequest: typeof BadRequest
+  Unauthorized: typeof Unauthorized
+  PaymentRequired: typeof PaymentRequired
+  Forbidden: typeof Forbidden
+  NotFound: typeof NotFound
+  MethodNotAllowed: typeof MethodNotAllowed
+  NotAcceptable: typeof NotAcceptable
+  Conflict: typeof Conflict
+  InternalServerError: typeof InternalServerError
+  NotImplemented: typeof NotImplemented
+  BadGateway: typeof BadGateway
+  ServiceUnavailable: typeof ServiceUnavailable
+  GatewayTimeout: typeof GatewayTimeout
+}
+
+export const HttpError: HttpErrorConstructor = {
   BadRequest,
   Unauthorized,
   PaymentRequired,
@@ -255,4 +271,4 @@ export const HttpError = {
   BadGateway,
   ServiceUnavailable,
   GatewayTimeout
-} as const
+}

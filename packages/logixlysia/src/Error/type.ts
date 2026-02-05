@@ -1,6 +1,6 @@
 // src/libs/elysia-http-problem-json/types.ts
 
-import type { HttpError, ProblemError } from './errors'
+import { ProblemError } from "./errors"
 
 export type Code =
   | number
@@ -13,8 +13,6 @@ export type Code =
   | 'INVALID_COOKIE_SIGNATURE'
   | 'INVALID_FILE_TYPE'
 
-// 获取 HttpError 对象的所有 Key (例如 "BadRequest" | "NotFound")
-export type HttpErrorType = keyof typeof HttpError
 
 export interface ErrorContext {
   request: Request

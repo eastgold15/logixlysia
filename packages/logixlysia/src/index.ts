@@ -130,11 +130,11 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
 // ==========================================
 // Error Exports
 // ==========================================
-export { HttpError, ProblemError } from './Error/errors'
+
+export * from "./Error/errors";
 export type { ProblemDocument } from './Error/errors'
 export type {
   Code,
-  HttpErrorType,
   ErrorContext,
   HttpProblemJsonOptions
 } from './Error/type'
