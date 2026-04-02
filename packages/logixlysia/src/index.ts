@@ -50,11 +50,6 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
 
   const app = new Elysia({
     name: "Logixlysia",
-    detail: {
-      description:
-        "Logixlysia is a plugin for Elysia that provides a logger and pino logger.",
-      tags: ["logging", "pino"],
-    },
   });
 
   const errorConfig = options.config?.error;
@@ -64,13 +59,15 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
       .state("logger", logger)
       .state("pino", logger.pino)
       .state("beforeTime", BigInt(0))
+      .state("pathname", "")
       .onStart(({ server }) => {
         if (server) {
           startServer(server, options);
         }
       })
-      .onRequest(({ store }) => {
+      .onRequest(({ request, store }) => {
         store.beforeTime = process.hrtime.bigint();
+        store.pathname = new URL(request.url).pathname;
       })
       .onAfterHandle(({ request, set, store }) => {
         if (didCustomLog.has(request)) {
@@ -117,10 +114,10 @@ export type {
   HttpErrorConstructor,
   ProblemConfig,
   ProblemDocument,
-} from "./Error/errors";
-export * from "./Error/errors";
-export { createProblem } from "./Error/errors";
-export type { Code } from "./Error/type";
+} from "./error/errors";
+export * from "./error/errors";
+export { createProblem } from "./error/errors";
+export type { Code } from "./error/type";
 
 // ==========================================
 // Utils Exports

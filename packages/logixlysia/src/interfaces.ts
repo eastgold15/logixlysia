@@ -2,8 +2,8 @@ import type {
   Logger as PinoLogger,
   LoggerOptions as PinoLoggerOptions,
 } from "pino";
-import type { ProblemError } from "./Error/errors";
-import type { Code } from "./Error/type";
+import type { ProblemError } from "./error/errors";
+import type { Code } from "./error/type";
 
 export type Pino = PinoLogger<never, boolean>;
 
@@ -11,11 +11,13 @@ export type LogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR";
 
 export interface StoreData {
   beforeTime: bigint;
+  pathname: string;
 }
 
 export interface LogixlysiaStore {
   beforeTime?: bigint;
   logger: Logger;
+  pathname?: string;
   pino: Pino;
   [key: string]: unknown;
 }

@@ -7,10 +7,8 @@ import type {
   Pino,
   StoreData,
 } from "../interfaces";
-import { logToTransports } from "../output";
-import { logToFile } from "../output/file";
 import { formatLine } from "./create-logger";
-import { handleHttpError } from "./handle-http-error";
+import { handleHttpError, outputPipeline } from "./handle-http-error";
 
 export const createLogger = (options: Options = {}): Logger => {
   const config = options.config;
@@ -54,56 +52,12 @@ export const createLogger = (options: Options = {}): Logger => {
     data: Record<string, unknown>,
     store: StoreData
   ): void => {
-    // Check if this log level should be filtered
     if (!shouldLog(level, config?.logFilter)) {
       return;
     }
 
-    logToTransports({ level, request, data, store, options });
-
-    const useTransportsOnly = config?.useTransportsOnly === true;
-    const disableInternalLogger = config?.disableInternalLogger === true;
-    const disableFileLogging = config?.disableFileLogging === true;
-
-    if (!(useTransportsOnly || disableFileLogging)) {
-      const filePath = config?.logFilePath;
-      if (filePath) {
-        logToFile({ filePath, level, request, data, store, options }).catch(
-          () => {
-            // Ignore errors
-          }
-        );
-      }
-    }
-
-    if (useTransportsOnly || disableInternalLogger) {
-      return;
-    }
-
-    const message = formatLine({ level, request, data, store, options });
-
-    switch (level) {
-      case "DEBUG": {
-        console.debug(message);
-        break;
-      }
-      case "INFO": {
-        console.info(message);
-        break;
-      }
-      case "WARNING": {
-        console.warn(message);
-        break;
-      }
-      case "ERROR": {
-        console.error(message);
-        break;
-      }
-      default: {
-        console.log(message);
-        break;
-      }
-    }
+    const consoleMessage = formatLine({ level, request, data, store, options });
+    outputPipeline(level, request, data, store, options, consoleMessage);
   };
 
   const logWithContext = (
@@ -112,7 +66,10 @@ export const createLogger = (options: Options = {}): Logger => {
     message: string,
     context?: Record<string, unknown>
   ): void => {
-    const store: StoreData = { beforeTime: process.hrtime.bigint() };
+    const store: StoreData = {
+      beforeTime: process.hrtime.bigint(),
+      pathname: new URL(request.url).pathname,
+    };
     log(level, request, { message, context }, store);
   };
 

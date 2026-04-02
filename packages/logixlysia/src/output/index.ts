@@ -8,22 +8,7 @@ interface LogToTransportsInput {
   store: StoreData;
 }
 
-export const logToTransports = (
-  ...args:
-    | [LogToTransportsInput]
-    | [LogLevel, Request, Record<string, unknown>, StoreData, Options]
-): void => {
-  const input: LogToTransportsInput =
-    typeof args[0] === "string"
-      ? {
-          level: args[0],
-          request: args[1],
-          data: args[2],
-          store: args[3],
-          options: args[4],
-        }
-      : args[0];
-
+export const logToTransports = (input: LogToTransportsInput): void => {
   const { level, request, data, store, options } = input;
   const transports = options.config?.transports ?? [];
   if (transports.length === 0) {

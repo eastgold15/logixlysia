@@ -2,6 +2,7 @@ import { promises as fs } from "node:fs";
 import { promisify } from "node:util";
 import { gzip } from "node:zlib";
 import type { LogRotationConfig } from "../interfaces";
+import { pad2 } from "../utils/format";
 import {
   getRotatedFiles,
   parseRetention,
@@ -10,8 +11,6 @@ import {
 } from "../utils/rotation";
 
 const gzipAsync = promisify(gzip);
-
-const pad2 = (value: number): string => String(value).padStart(2, "0");
 
 export const getRotatedFileName = (filePath: string, date: Date): string => {
   const yyyy = date.getFullYear();

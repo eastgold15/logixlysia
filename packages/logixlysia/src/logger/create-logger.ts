@@ -1,9 +1,7 @@
 import chalk from "chalk";
 import { getStatusCode } from "../helpers/status";
 import type { LogLevel, Options, Pino, StoreData } from "../interfaces";
-
-const pad2 = (value: number): string => String(value).padStart(2, "0");
-const pad3 = (value: number): string => String(value).padStart(3, "0");
+import { pad2, pad3 } from "../utils/format";
 
 const shouldUseColors = (options: Options): boolean => {
   const config = options.config;
@@ -188,7 +186,7 @@ export const formatLine = ({
       ? 0
       : Number(process.hrtime.bigint() - store.beforeTime) / 1_000_000;
 
-  const pathname = new URL(request.url).pathname;
+  const pathname = store.pathname || new URL(request.url).pathname;
   const statusValue = data.status;
   const statusCode =
     statusValue === null || statusValue === undefined

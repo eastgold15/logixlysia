@@ -1,0 +1,10 @@
+export type Code =
+  | number
+  | "PROBLEM_ERROR"
+  | "UNKNOWN"
+  | "VALIDATION"
+  | "NOT_FOUND"
+  | "PARSE"
+  | "INTERNAL_SERVER_ERROR"
+  | "INVALID_COOKIE_SIGNATURE"
+  | "INVALID_FILE_TYPE";

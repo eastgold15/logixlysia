@@ -1,32 +1,29 @@
-import type { ProblemError } from "../Error/errors";
+import type { ProblemError } from "../error/errors";
 import type { LogLevel, Options, StoreData } from "../interfaces";
 import { logToTransports } from "../output";
 import { logToFile } from "../output/file";
 
-export const handleHttpError = (
+/**
+ * 统一输出管道：transports → file → console
+ * handleHttpError 和 log 共用同一管道，不再重复判断配置
+ */
+const outputPipeline = (
+  level: LogLevel,
   request: Request,
-  problem: ProblemError,
+  data: Record<string, unknown>,
   store: StoreData,
-  options: Options
+  options: Options,
+  consoleMessage?: string
 ): void => {
   const config = options.config;
 
-  // 日志级别：4xx = WARNING，5xx = ERROR
-  const level: LogLevel = problem.status >= 500 ? "ERROR" : "WARNING";
-
-  // 1. 准备日志数据
-  const rfcData = problem.toJSON();
-  const data = {
-    status: problem.status,
-    message: problem.detail || problem.title,
-    ...rfcData,
-  };
-
-  // 2. Transports
+  // 1. Transports
   logToTransports({ level, request, data, store, options });
 
-  // 3. File Logging
-  if (!(config?.useTransportsOnly || config?.disableFileLogging)) {
+  // 2. File
+  const useTransportsOnly = config?.useTransportsOnly === true;
+  const disableFileLogging = config?.disableFileLogging === true;
+  if (!(useTransportsOnly || disableFileLogging)) {
     const filePath = config?.logFilePath;
     if (filePath) {
       logToFile({ filePath, level, request, data, store, options }).catch(
@@ -35,42 +32,83 @@ export const handleHttpError = (
     }
   }
 
-  // 4. Console
-  if (config?.useTransportsOnly || config?.disableInternalLogger) return;
+  // 3. Console
+  if (useTransportsOnly || config?.disableInternalLogger === true) return;
 
-  let timestamp = "";
-  if (config?.timestamp) {
-    timestamp = `[${new Date().toISOString()}] `;
-  }
-
-  const pathname = new URL(request.url).pathname;
-  console.error(
-    `${timestamp}${level} ${request.method} ${pathname} ${problem.status} - ${problem.title}`
-  );
-
-  // 详细错误日志
-  if (config?.error?.verboseErrorLogging) {
-    const json = problem.toJSON();
-
-    if (json.detail) {
-      console.error(`  Detail: ${json.detail}`);
-    }
-    if (json.instance) {
-      console.error(`  Instance: ${json.instance}`);
-    }
-    if (json.type && json.type !== "about:blank") {
-      console.error(`  Type: ${json.type}`);
-    }
-
-    const extensions = Object.entries(json).filter(
-      ([key]) =>
-        !["type", "title", "status", "detail", "instance"].includes(key)
-    );
-    if (extensions.length > 0) {
-      console.error("  Extensions:");
-      for (const [key, value] of extensions) {
-        console.error(`    ${key}:`, value);
-      }
+  if (consoleMessage) {
+    switch (level) {
+      case "DEBUG":
+        console.debug(consoleMessage);
+        break;
+      case "INFO":
+        console.info(consoleMessage);
+        break;
+      case "WARNING":
+        console.warn(consoleMessage);
+        break;
+      case "ERROR":
+        console.error(consoleMessage);
+        break;
+      default:
+        console.log(consoleMessage);
     }
   }
 };
+
+export const handleHttpError = (
+  request: Request,
+  problem: ProblemError,
+  store: StoreData,
+  options: Options
+): void => {
+  const config = options.config;
+  const level: LogLevel = problem.status >= 500 ? "ERROR" : "WARNING";
+  const rfcData = problem.toJSON();
+  const data = {
+    status: problem.status,
+    message: problem.detail || problem.title,
+    ...rfcData,
+  };
+
+  // 构建 console 消息
+  let consoleMessage = "";
+  if (!(config?.useTransportsOnly || config?.disableInternalLogger)) {
+    let timestamp = "";
+    if (config?.timestamp) {
+      timestamp = `[${new Date().toISOString()}] `;
+    }
+    const pathname = store.pathname || new URL(request.url).pathname;
+    consoleMessage = `${timestamp}${level} ${request.method} ${pathname} ${problem.status} - ${problem.title}`;
+
+    // 详细错误日志
+    if (config?.error?.verboseErrorLogging) {
+      const parts = [consoleMessage];
+      if (rfcData.detail) parts.push(`  Detail: ${rfcData.detail}`);
+      if (rfcData.instance) parts.push(`  Instance: ${rfcData.instance}`);
+      if (rfcData.type && rfcData.type !== "about:blank")
+        parts.push(`  Type: ${rfcData.type}`);
+      const extensions = Object.entries(rfcData).filter(
+        ([key]) =>
+          !["type", "title", "status", "detail", "instance"].includes(key)
+      );
+      if (extensions.length > 0) {
+        parts.push("  Extensions:");
+        for (const [key, value] of extensions) {
+          parts.push(`    ${key}: ${JSON.stringify(value)}`);
+        }
+      }
+      consoleMessage = parts.join("\n");
+    }
+  }
+
+  outputPipeline(
+    level,
+    request,
+    data,
+    store,
+    options,
+    consoleMessage || undefined
+  );
+};
+
+export { outputPipeline };

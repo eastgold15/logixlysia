@@ -14,8 +14,8 @@ import {
   createProblem,
   type ProblemConfig,
   ProblemError,
-} from "../Error/errors";
-import type { Code } from "../Error/type";
+} from "../error/errors";
+import type { Code } from "../error/type";
 import type { ErrorMapping, ErrorResolver } from "../interfaces";
 import { getErrorCode } from "./get-error-code";
 
