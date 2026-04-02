@@ -5,15 +5,21 @@ import type {
 import type { ProblemError } from "./error/errors";
 import type { Code } from "./error/type";
 
+/** Pino Logger 实例类型 */
 export type Pino = PinoLogger<never, boolean>;
 
+/** 日志级别 */
 export type LogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR";
 
+/** 单次请求携带的计时和路径数据 */
 export interface StoreData {
+  /** 请求开始的纳秒时间戳（hrtime） */
   beforeTime: bigint;
+  /** 缓存的 URL pathname，避免重复解析 */
   pathname: string;
 }
 
+/** Elysia store 中挂载的 logixlysia 状态 */
 export interface LogixlysiaStore {
   beforeTime?: bigint;
   logger: Logger;
@@ -22,7 +28,15 @@ export interface LogixlysiaStore {
   [key: string]: unknown;
 }
 
+/** 自定义日志传输接口（如 Elasticsearch、Slack 等） */
 export interface Transport {
+  /**
+   * 接收一条日志并输出到外部系统
+   *
+   * @param level - 日志级别
+   * @param message - 日志消息
+   * @param meta - 附加元数据（请求信息、耗时等）
+   */
   log: (
     level: LogLevel,
     message: string,
@@ -30,20 +44,17 @@ export interface Transport {
   ) => void | Promise<void>;
 }
 
+/** 日志文件轮转配置 */
 export interface LogRotationConfig {
+  /** 轮转后是否压缩旧文件 */
   compress?: boolean;
+  /** 压缩算法 */
   compression?: "gzip";
-  /**
-   * Rotate at a fixed interval, e.g. '1d', '12h'.
-   */
+  /** 固定间隔轮转，如 `'1d'`、`'12h'` */
   interval?: string;
-  /**
-   * Keep at most N files or keep files for a duration like '7d'.
-   */
+  /** 保留的最大文件数量或时长，如 `10` 或 `'7d'` */
   maxFiles?: number | string;
-  /**
-   * Max log file size before rotation, e.g. '10m', '5k', or a byte count.
-   */
+  /** 单个日志文件最大体积，如 `'10m'`、`'5k'`，或字节数 */
   maxSize?: string | number;
 }
 
@@ -51,12 +62,21 @@ export interface LogRotationConfig {
 // Error Mapping
 // ==========================================
 
+/** 错误码到 HTTP 响应的映射条目 */
 export interface ErrorMapping {
+  /** 错误详情描述 */
   detail?: string;
+  /** HTTP 状态码 */
   status: number;
+  /** 错误标题 */
   title: string;
 }
 
+/**
+ * 自定义错误解析回调
+ *
+ * 返回 `ProblemError` 表示已处理，返回 `void` 交给下一层处理
+ */
 export type ErrorResolver = (
   error: unknown,
   context: { code: Code; path: string; request: Request }
@@ -66,42 +86,69 @@ export type ErrorResolver = (
 // Options
 // ==========================================
 
+/** 启动消息配置 */
 export interface StartupConfig {
+  /** 启动消息格式，默认 `"banner"` */
   format?: "simple" | "banner";
+  /** 是否显示启动消息，默认 `true` */
   show?: boolean;
 }
 
+/** 日志格式配置 */
 export interface FormatConfig {
+  /** 是否启用彩色输出，默认 `true`（仅 TTY） */
   colors?: boolean;
+  /** 是否在日志中显示请求 IP，默认 `false` */
   showIp?: boolean;
+  /** 自定义日志模板，如 `'🦊 {now} {level} {method} {pathname} {status}'` */
   template?: string;
+  /** 时间戳格式，如 `'yyyy-mm-dd HH:MM:ss.SSS'` */
   timestamp?: string;
 }
 
+/** 文件日志配置 */
 export interface FileConfig {
+  /** 日志文件路径（必填） */
   path: string;
+  /** 日志轮转配置 */
   rotation?: LogRotationConfig;
 }
 
+/** 自定义传输配置 */
 export interface TransportsConfig {
+  /** 设为 `true` 时只使用 transports，禁用控制台和文件输出 */
   only?: boolean;
+  /** 传输目标列表 */
   targets: Transport[];
 }
 
+/** 错误处理配置 */
 export interface ErrorConfig {
+  /** 错误码映射表（Postgres / MySQL / 自定义错误码） */
   errorMap?: Record<string, ErrorMapping>;
+  /** 自定义错误解析回调 */
   resolve?: ErrorResolver;
+  /** 自定义错误类型的 Base URL（RFC 9457） */
   typeBaseUrl?: string;
+  /** 是否在控制台显示完整错误详情（detail、extensions），默认 `false` */
   verbose?: boolean;
 }
 
+/** Logixlysia 插件配置 */
 export interface Options {
+  /** 错误处理配置 */
   error?: ErrorConfig;
+  /** 文件日志配置，设为 `false` 禁用文件日志 */
   file?: false | FileConfig;
+  /** 日志格式配置 */
   format?: FormatConfig;
+  /** 日志级别过滤，接受单个级别或级别数组 */
   logLevel?: LogLevel | LogLevel[];
+  /** Pino Logger 原生配置透传 */
   pino?: PinoLoggerOptions;
+  /** 启动消息配置 */
   startup?: StartupConfig;
+  /** 自定义传输（数组或带 `only` 选项的对象） */
   transports?: Transport[] | TransportsConfig;
 }
 
@@ -109,35 +156,43 @@ export interface Options {
 // Logger
 // ==========================================
 
+/** Logger 实例，可通过 `store.logger` 访问 */
 export interface Logger {
+  /** 记录 DEBUG 级别日志 */
   debug: (
     request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void;
+  /** 记录 ERROR 级别日志 */
   error: (
     request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void;
+  /** 处理 HTTP 错误并输出日志 */
   handleHttpError: (
     request: Request,
     error: ProblemError,
     store: StoreData,
     options: Options
   ) => void;
+  /** 记录 INFO 级别日志 */
   info: (
     request: Request,
     message: string,
     context?: Record<string, unknown>
   ) => void;
+  /** 记录指定级别的日志 */
   log: (
     level: LogLevel,
     request: Request,
     data: Record<string, unknown>,
     store: StoreData
   ) => void;
+  /** 底层 Pino Logger 实例 */
   pino: Pino;
+  /** 记录 WARNING 级别日志 */
   warn: (
     request: Request,
     message: string,
@@ -145,6 +200,7 @@ export interface Logger {
   ) => void;
 }
 
+/** Logixlysia 请求上下文 */
 export interface LogixlysiaContext {
   request: Request;
   store: LogixlysiaStore;
