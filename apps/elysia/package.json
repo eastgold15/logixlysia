@@ -9,12 +9,12 @@
   },
   "dependencies": {
     "@elysiajs/swagger": "^1.3.1",
-    "logixlysia": "*"
+    "@pori15/logixlysia": "*"
   },
   "devDependencies": {
     "@repo/tsconfig": "*",
     "@types/bun": "^1.3.11",
-    "typescript": "^5.9.3"
+    "typescript": "^6.0.2"
   },
   "peerDependencies": {
     "elysia": "latest"
