@@ -19,25 +19,28 @@ export const createLogger = (options: Options = {}): Logger => {
   const shouldPrettyPrint =
     prettyPrint === true && pinoOptions.transport === undefined;
 
-  const transport = shouldPrettyPrint
-    ? pino.transport({
-        target: "pino-pretty",
-        options: {
-          colorize: process.stdout?.isTTY === true,
-          translateTime: config?.timestamp?.translateTime,
-          messageKey: pinoOptions.messageKey,
-          errorKey: pinoOptions.errorKey,
+  const pinoLogger: Pino = shouldPrettyPrint
+    ? pino({
+        ...pinoOptions,
+        level: pinoOptions.level ?? "info",
+        messageKey: pinoOptions.messageKey,
+        errorKey: pinoOptions.errorKey,
+        transport: {
+          target: "pino-pretty",
+          options: {
+            colorize: process.stdout?.isTTY === true,
+            translateTime: config?.timestamp?.translateTime,
+            messageKey: pinoOptions.messageKey,
+            errorKey: pinoOptions.errorKey,
+          },
         },
       })
-    : pinoOptions.transport;
-
-  const pinoLogger: Pino = pino({
-    ...pinoOptions,
-    level: pinoOptions.level ?? "info",
-    messageKey: pinoOptions.messageKey,
-    errorKey: pinoOptions.errorKey,
-    transport,
-  });
+    : pino({
+        ...pinoOptions,
+        level: pinoOptions.level ?? "info",
+        messageKey: pinoOptions.messageKey,
+        errorKey: pinoOptions.errorKey,
+      });
 
   const shouldLog = (level: LogLevel, logFilter?: LogFilter): boolean => {
     if (!logFilter?.level || logFilter.level.length === 0) {
