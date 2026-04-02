@@ -1,4 +1,4 @@
-import type { LogLevel, Options, Request, StoreData } from '../interfaces'
+import type { LogLevel, Options, StoreData } from '../interfaces'
 
 interface LogToTransportsInput {
   level: LogLevel
