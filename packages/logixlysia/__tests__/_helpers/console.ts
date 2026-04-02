@@ -1,14 +1,14 @@
-import { mock } from 'bun:test'
+import { mock } from "bun:test";
 
-type ConsoleMethod = 'log' | 'info' | 'warn' | 'error' | 'debug'
+type ConsoleMethod = "log" | "info" | "warn" | "error" | "debug";
 
 export const spyConsole = (
-  methods: ConsoleMethod[] = ['log', 'info', 'warn', 'error', 'debug']
+  methods: ConsoleMethod[] = ["log", "info", "warn", "error", "debug"]
 ): {
-  spies: Record<ConsoleMethod, ReturnType<typeof mock>>
-  restore: () => void
+  spies: Record<ConsoleMethod, ReturnType<typeof mock>>;
+  restore: () => void;
 } => {
-  const originals = new Map<ConsoleMethod, typeof console.log>()
+  const originals = new Map<ConsoleMethod, typeof console.log>();
   const spies = {
     log: mock(() => {
       /* noop */
@@ -24,22 +24,22 @@ export const spyConsole = (
     }),
     debug: mock(() => {
       /* noop */
-    })
-  } as const
+    }),
+  } as const;
 
   for (const method of methods) {
-    originals.set(method, console[method])
-    console[method] = spies[method] as unknown as typeof console.log
+    originals.set(method, console[method]);
+    console[method] = spies[method] as unknown as typeof console.log;
   }
 
   const restore = () => {
     for (const method of methods) {
-      const original = originals.get(method)
+      const original = originals.get(method);
       if (original) {
-        console[method] = original
+        console[method] = original;
       }
     }
-  }
+  };
 
-  return { spies: { ...spies }, restore }
-}
+  return { spies: { ...spies }, restore };
+};

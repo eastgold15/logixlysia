@@ -1,8 +1,8 @@
-import type { Metadata } from 'next'
+import type { Metadata } from "next";
 
 const baseUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL
   ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-  : 'http://localhost:3000'
+  : "http://localhost:3000";
 
 export const createMetadata = (
   title: string,
@@ -13,52 +13,52 @@ export const createMetadata = (
   metadataBase: new URL(baseUrl),
   authors: [
     {
-      name: 'Noppakorn Kaewsalabnil',
-      url: 'https://www.pungrumpy.com'
-    }
+      name: "Noppakorn Kaewsalabnil",
+      url: "https://www.pungrumpy.com",
+    },
   ],
   formatDetection: {
-    telephone: false
+    telephone: false,
   },
-  creator: 'Noppakorn Kaewsalabnil',
+  creator: "Noppakorn Kaewsalabnil",
   keywords: [
-    'web',
-    'logging',
-    'logger',
-    'elysia',
-    'elysiajs',
-    'logixlysia',
-    'middleware'
+    "web",
+    "logging",
+    "logger",
+    "elysia",
+    "elysiajs",
+    "logixlysia",
+    "middleware",
   ],
   openGraph: {
     title,
     description,
-    siteName: 'Logixlysia',
-    locale: 'en_US',
-    type: 'website',
+    siteName: "Logixlysia",
+    locale: "en_US",
+    type: "website",
     images: [
       {
-        url: new URL('/opengraph-image.png', baseUrl).toString(),
+        url: new URL("/opengraph-image.png", baseUrl).toString(),
         width: 1200,
-        height: 630
-      }
-    ]
+        height: 630,
+      },
+    ],
   },
   twitter: {
     title,
     description,
-    creator: '@pungrumpy',
-    card: 'summary_large_image',
+    creator: "@pungrumpy",
+    card: "summary_large_image",
     images: [
       {
-        url: new URL('/opengraph-image.png', baseUrl).toString(),
+        url: new URL("/opengraph-image.png", baseUrl).toString(),
         width: 1200,
-        height: 630
-      }
-    ]
+        height: 630,
+      },
+    ],
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'default'
-  }
-})
+    statusBarStyle: "default",
+  },
+});

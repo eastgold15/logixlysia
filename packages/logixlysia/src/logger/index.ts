@@ -1,52 +1,52 @@
-import pino from 'pino'
+import pino from "pino";
 import type {
   LogFilter,
   Logger,
   LogLevel,
   Options,
   Pino,
-  StoreData
-} from '../interfaces'
-import { logToTransports } from '../output'
-import { logToFile } from '../output/file'
-import { formatLine } from './create-logger'
-import { handleHttpError } from './handle-http-error'
+  StoreData,
+} from "../interfaces";
+import { logToTransports } from "../output";
+import { logToFile } from "../output/file";
+import { formatLine } from "./create-logger";
+import { handleHttpError } from "./handle-http-error";
 
 export const createLogger = (options: Options = {}): Logger => {
-  const config = options.config
+  const config = options.config;
 
-  const pinoConfig = config?.pino
-  const { prettyPrint, ...pinoOptions } = pinoConfig ?? {}
+  const pinoConfig = config?.pino;
+  const { prettyPrint, ...pinoOptions } = pinoConfig ?? {};
 
   const shouldPrettyPrint =
-    prettyPrint === true && pinoOptions.transport === undefined
+    prettyPrint === true && pinoOptions.transport === undefined;
 
   const transport = shouldPrettyPrint
     ? pino.transport({
-        target: 'pino-pretty',
+        target: "pino-pretty",
         options: {
           colorize: process.stdout?.isTTY === true,
           translateTime: config?.timestamp?.translateTime,
           messageKey: pinoOptions.messageKey,
-          errorKey: pinoOptions.errorKey
-        }
+          errorKey: pinoOptions.errorKey,
+        },
       })
-    : pinoOptions.transport
+    : pinoOptions.transport;
 
   const pinoLogger: Pino = pino({
     ...pinoOptions,
-    level: pinoOptions.level ?? 'info',
+    level: pinoOptions.level ?? "info",
     messageKey: pinoOptions.messageKey,
     errorKey: pinoOptions.errorKey,
-    transport
-  })
+    transport,
+  });
 
   const shouldLog = (level: LogLevel, logFilter?: LogFilter): boolean => {
     if (!logFilter?.level || logFilter.level.length === 0) {
-      return true
+      return true;
     }
-    return logFilter.level.includes(level)
-  }
+    return logFilter.level.includes(level);
+  };
 
   const log = (
     level: LogLevel,
@@ -56,55 +56,55 @@ export const createLogger = (options: Options = {}): Logger => {
   ): void => {
     // Check if this log level should be filtered
     if (!shouldLog(level, config?.logFilter)) {
-      return
+      return;
     }
 
-    logToTransports({ level, request, data, store, options })
+    logToTransports({ level, request, data, store, options });
 
-    const useTransportsOnly = config?.useTransportsOnly === true
-    const disableInternalLogger = config?.disableInternalLogger === true
-    const disableFileLogging = config?.disableFileLogging === true
+    const useTransportsOnly = config?.useTransportsOnly === true;
+    const disableInternalLogger = config?.disableInternalLogger === true;
+    const disableFileLogging = config?.disableFileLogging === true;
 
     if (!(useTransportsOnly || disableFileLogging)) {
-      const filePath = config?.logFilePath
+      const filePath = config?.logFilePath;
       if (filePath) {
         logToFile({ filePath, level, request, data, store, options }).catch(
           () => {
             // Ignore errors
           }
-        )
+        );
       }
     }
 
     if (useTransportsOnly || disableInternalLogger) {
-      return
+      return;
     }
 
-    const message = formatLine({ level, request, data, store, options })
+    const message = formatLine({ level, request, data, store, options });
 
     switch (level) {
-      case 'DEBUG': {
-        console.debug(message)
-        break
+      case "DEBUG": {
+        console.debug(message);
+        break;
       }
-      case 'INFO': {
-        console.info(message)
-        break
+      case "INFO": {
+        console.info(message);
+        break;
       }
-      case 'WARNING': {
-        console.warn(message)
-        break
+      case "WARNING": {
+        console.warn(message);
+        break;
       }
-      case 'ERROR': {
-        console.error(message)
-        break
+      case "ERROR": {
+        console.error(message);
+        break;
       }
       default: {
-        console.log(message)
-        break
+        console.log(message);
+        break;
       }
     }
-  }
+  };
 
   const logWithContext = (
     level: LogLevel,
@@ -112,27 +112,27 @@ export const createLogger = (options: Options = {}): Logger => {
     message: string,
     context?: Record<string, unknown>
   ): void => {
-    const store: StoreData = { beforeTime: process.hrtime.bigint() }
-    log(level, request, { message, context }, store)
-  }
+    const store: StoreData = { beforeTime: process.hrtime.bigint() };
+    log(level, request, { message, context }, store);
+  };
 
   return {
     pino: pinoLogger,
     log,
     handleHttpError: (request, error, store) => {
-      handleHttpError(request, error, store, options)
+      handleHttpError(request, error, store, options);
     },
     debug: (request, message, context) => {
-      logWithContext('DEBUG', request, message, context)
+      logWithContext("DEBUG", request, message, context);
     },
     info: (request, message, context) => {
-      logWithContext('INFO', request, message, context)
+      logWithContext("INFO", request, message, context);
     },
     warn: (request, message, context) => {
-      logWithContext('WARNING', request, message, context)
+      logWithContext("WARNING", request, message, context);
     },
     error: (request, message, context) => {
-      logWithContext('ERROR', request, message, context)
-    }
-  }
-}
+      logWithContext("ERROR", request, message, context);
+    },
+  };
+};

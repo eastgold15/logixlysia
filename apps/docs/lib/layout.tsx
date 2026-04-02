@@ -1,5 +1,5 @@
-import type { BaseLayoutProps } from 'fumadocs-ui/layouts/shared'
-import { Icons } from '@/components/icons'
+import type { BaseLayoutProps } from "fumadocs-ui/layouts/shared";
+import { Icons } from "@/components/icons";
 
 export const baseOptions = (): BaseLayoutProps => ({
   nav: {
@@ -9,27 +9,27 @@ export const baseOptions = (): BaseLayoutProps => ({
         <span className="font-semibold text-lg tracking-tight">Logixlysia</span>
       </span>
     ),
-    url: '/'
+    url: "/",
   },
   links: [
     {
-      text: 'Home',
-      url: '/',
-      active: 'url'
+      text: "Home",
+      url: "/",
+      active: "url",
     },
     {
-      text: 'Docs',
-      url: '/introduction',
-      active: 'nested-url'
+      text: "Docs",
+      url: "/introduction",
+      active: "nested-url",
     },
     {
-      text: 'NPM',
-      url: 'https://www.npmjs.com/package/logixlysia',
-      active: 'none'
-    }
+      text: "NPM",
+      url: "https://www.npmjs.com/package/logixlysia",
+      active: "none",
+    },
   ],
-  githubUrl: 'https://github.com/PunGrumpy/logixlysia',
+  githubUrl: "https://github.com/PunGrumpy/logixlysia",
   themeSwitch: {
-    mode: 'light-dark-system'
-  }
-})
+    mode: "light-dark-system",
+  },
+});

@@ -1,32 +1,34 @@
 // src/libs/elysia-http-problem-json/types.ts
 
-import { ProblemError } from "./errors"
+import { ProblemError } from "./errors";
 
 export type Code =
   | number
-  | 'PROBLEM_ERROR'
-  | 'UNKNOWN'
-  | 'VALIDATION'
-  | 'NOT_FOUND'
-  | 'PARSE'
-  | 'INTERNAL_SERVER_ERROR'
-  | 'INVALID_COOKIE_SIGNATURE'
-  | 'INVALID_FILE_TYPE'
-
+  | "PROBLEM_ERROR"
+  | "UNKNOWN"
+  | "VALIDATION"
+  | "NOT_FOUND"
+  | "PARSE"
+  | "INTERNAL_SERVER_ERROR"
+  | "INVALID_COOKIE_SIGNATURE"
+  | "INVALID_FILE_TYPE";
 
 export interface ErrorContext {
-  request: Request
-  path: string
-  code: string | number
-  error: unknown
+  code: string | number;
+  error: unknown;
+  path: string;
+  request: Request;
 }
 
 export interface HttpProblemJsonOptions {
   /**
-   * 自定义错误类型的 Base URL
-   * @example "https://api.mysite.com/errors"
+   * 📢 Listen Hook
+   * 在响应发送前触发（用于日志）。
    */
-  typeBaseUrl?: string
+  onBeforeRespond?: (
+    problem: ProblemError,
+    context: ErrorContext
+  ) => void | Promise<void>;
 
   /**
    * 🪝 Transform Hook
@@ -36,14 +38,10 @@ export interface HttpProblemJsonOptions {
   transform?: (
     error: unknown,
     context: ErrorContext
-  ) => ProblemError | undefined | null // 这里直接返回 ProblemError 实例更好，或者用 HttpErrorType 也可以，看你喜好
-
+  ) => ProblemError | undefined | null; // 这里直接返回 ProblemError 实例更好，或者用 HttpErrorType 也可以，看你喜好
   /**
-   * 📢 Listen Hook
-   * 在响应发送前触发（用于日志）。
+   * 自定义错误类型的 Base URL
+   * @example "https://api.mysite.com/errors"
    */
-  onBeforeRespond?: (
-    problem: ProblemError,
-    context: ErrorContext
-  ) => void | Promise<void>
+  typeBaseUrl?: string;
 }
