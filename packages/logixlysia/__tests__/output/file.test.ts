@@ -11,7 +11,7 @@ describe("logToFile", () => {
     const dir = await createTempDir();
     try {
       const filePath = join(dir, "logs", "app.log");
-      const options: Options = { config: {} };
+      const options: Options = {};
 
       await logToFile({
         filePath,
@@ -34,8 +34,9 @@ describe("logToFile", () => {
     try {
       const filePath = join(dir, "logs", "rotate.log");
       const options: Options = {
-        config: {
-          logRotation: { maxSize: 1, compress: true, compression: "gzip" },
+        file: {
+          path: filePath,
+          rotation: { maxSize: 1, compress: true, compression: "gzip" },
         },
       };
 

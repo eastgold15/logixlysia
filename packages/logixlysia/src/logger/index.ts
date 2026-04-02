@@ -1,25 +1,23 @@
 import pino from "pino";
-import type {
-  LogFilter,
-  Logger,
-  LogLevel,
-  Options,
-  Pino,
-  StoreData,
-} from "../interfaces";
+import type { Logger, LogLevel, Options, Pino, StoreData } from "../interfaces";
 import { formatLine } from "./create-logger";
 import { handleHttpError, outputPipeline } from "./handle-http-error";
 
+const shouldLog = (
+  level: LogLevel,
+  logLevel?: LogLevel | LogLevel[]
+): boolean => {
+  if (logLevel === undefined) return true;
+  const levels = Array.isArray(logLevel) ? logLevel : [logLevel];
+  if (levels.length === 0) return true;
+  return levels.includes(level);
+};
+
 export const createLogger = (options: Options = {}): Logger => {
-  const config = options.config;
+  const pinoOptions = options.pino ?? {};
+  const isPrettyPrint = pinoOptions.transport === undefined;
 
-  const pinoConfig = config?.pino;
-  const { prettyPrint, ...pinoOptions } = pinoConfig ?? {};
-
-  const shouldPrettyPrint =
-    prettyPrint === true && pinoOptions.transport === undefined;
-
-  const pinoLogger: Pino = shouldPrettyPrint
+  const pinoLogger: Pino = isPrettyPrint
     ? pino({
         ...pinoOptions,
         level: pinoOptions.level ?? "info",
@@ -29,7 +27,7 @@ export const createLogger = (options: Options = {}): Logger => {
           target: "pino-pretty",
           options: {
             colorize: process.stdout?.isTTY === true,
-            translateTime: config?.timestamp?.translateTime,
+            translateTime: options.format?.timestamp,
             messageKey: pinoOptions.messageKey,
             errorKey: pinoOptions.errorKey,
           },
@@ -42,20 +40,13 @@ export const createLogger = (options: Options = {}): Logger => {
         errorKey: pinoOptions.errorKey,
       });
 
-  const shouldLog = (level: LogLevel, logFilter?: LogFilter): boolean => {
-    if (!logFilter?.level || logFilter.level.length === 0) {
-      return true;
-    }
-    return logFilter.level.includes(level);
-  };
-
   const log = (
     level: LogLevel,
     request: Request,
     data: Record<string, unknown>,
     store: StoreData
   ): void => {
-    if (!shouldLog(level, config?.logFilter)) {
+    if (!shouldLog(level, options.logLevel)) {
       return;
     }
 

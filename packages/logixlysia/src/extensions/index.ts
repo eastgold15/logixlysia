@@ -5,7 +5,7 @@ export const startServer = (
   server: { port?: number; hostname?: string; protocol?: string | null },
   options: Options
 ): void => {
-  const showStartupMessage = options.config?.showStartupMessage ?? true;
+  const showStartupMessage = options.startup?.show ?? true;
   if (!showStartupMessage) {
     return;
   }
@@ -18,7 +18,7 @@ export const startServer = (
   const url = `${protocol}://${hostname}:${port}`;
   const message = `🦊 Elysia is running at ${url}`;
 
-  const format = options.config?.startupMessageFormat ?? "banner";
+  const format = options.startup?.format ?? "banner";
   if (format === "simple") {
     console.log(message);
     return;

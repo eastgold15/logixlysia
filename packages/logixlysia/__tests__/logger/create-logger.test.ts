@@ -16,17 +16,16 @@ describe("createLogger", () => {
     expect(typeof logger.debug).toBe("function");
   });
 
-  test("respects disableInternalLogger and still calls transports", async () => {
+  test("respects transports.only and still calls transports", async () => {
     const transport = mock<
       (lvl: unknown, msg: unknown, meta?: unknown) => void
     >(() => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -65,10 +64,9 @@ describe("createLogger", () => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -94,7 +92,7 @@ describe("createLogger", () => {
 
     expect(transport).toHaveBeenCalledTimes(1);
     const [levelValue] = transport.mock.calls[0] ?? [undefined];
-    expect(levelValue).toBe("ERROR");
+    expect(levelValue).toBe("WARNING");
 
     await new Promise((resolve) => setTimeout(resolve, 0));
   });

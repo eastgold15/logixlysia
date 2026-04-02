@@ -4,8 +4,7 @@ import type { LogLevel, Options, Pino, StoreData } from "../interfaces";
 import { pad2, pad3 } from "../utils/format";
 
 const shouldUseColors = (options: Options): boolean => {
-  const config = options.config;
-  const enabledByConfig = config?.useColors ?? true;
+  const enabledByConfig = options.format?.colors ?? true;
 
   // Avoid ANSI sequences in non-interactive output (pipes, CI logs, files).
   const isTty =
@@ -169,15 +168,15 @@ export const formatLine = ({
   store: StoreData;
   options: Options;
 }): string => {
-  const config = options.config;
+  const fmt = options.format;
   const useColors = shouldUseColors(options);
   const format =
-    config?.customLogFormat ??
+    fmt?.template ??
     "🦊 {now} {level} {duration} {method} {pathname} {status} {message} {ip} {context}";
 
   const now = new Date();
   const epoch = String(now.getTime());
-  const rawTimestamp = formatTimestamp(now, config?.timestamp?.translateTime);
+  const rawTimestamp = formatTimestamp(now, fmt?.timestamp);
   const timestamp = getColoredTimestamp(rawTimestamp, useColors);
 
   const message = typeof data.message === "string" ? data.message : "";
@@ -193,7 +192,7 @@ export const formatLine = ({
       ? 200
       : getStatusCode(statusValue);
   const status = String(statusCode);
-  const ip = config?.ip === true ? getIp(request) : "";
+  const ip = fmt?.showIp === true ? getIp(request) : "";
   const ctxString = getContextString(data.context);
   const coloredLevel = getColoredLevel(level, useColors);
   const coloredMethod = getColoredMethod(request.method, useColors);

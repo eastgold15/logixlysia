@@ -1,7 +1,21 @@
 import type { ProblemError } from "../error/errors";
-import type { LogLevel, Options, StoreData } from "../interfaces";
+import type {
+  LogLevel,
+  Options,
+  StoreData,
+  Transport,
+  TransportsConfig,
+} from "../interfaces";
 import { logToTransports } from "../output";
 import { logToFile } from "../output/file";
+
+const normalizeTransports = (
+  transports?: Transport[] | TransportsConfig
+): { targets: Transport[]; only: boolean } => {
+  if (!transports) return { targets: [], only: false };
+  if (Array.isArray(transports)) return { targets: transports, only: false };
+  return { targets: transports.targets, only: transports.only === true };
+};
 
 /**
  * 统一输出管道：transports → file → console
@@ -15,27 +29,31 @@ const outputPipeline = (
   options: Options,
   consoleMessage?: string
 ): void => {
-  const config = options.config;
+  const { targets, only: transportsOnly } = normalizeTransports(
+    options.transports
+  );
 
   // 1. Transports
-  logToTransports({ level, request, data, store, options });
+  logToTransports({ level, request, data, store, transports: targets });
 
   // 2. File
-  const useTransportsOnly = config?.useTransportsOnly === true;
-  const disableFileLogging = config?.disableFileLogging === true;
-  if (!(useTransportsOnly || disableFileLogging)) {
-    const filePath = config?.logFilePath;
-    if (filePath) {
-      logToFile({ filePath, level, request, data, store, options }).catch(
-        (e) => {
-          console.error(e);
-        }
-      );
-    }
+  const fileConfig = options.file;
+  const hasFile = fileConfig !== false && fileConfig !== undefined;
+  if (!transportsOnly && hasFile) {
+    logToFile({
+      filePath: fileConfig.path,
+      level,
+      request,
+      data,
+      store,
+      options,
+    }).catch((e) => {
+      console.error(e);
+    });
   }
 
   // 3. Console
-  if (useTransportsOnly || config?.disableInternalLogger === true) return;
+  if (transportsOnly) return;
 
   if (consoleMessage) {
     switch (level) {
@@ -63,7 +81,6 @@ export const handleHttpError = (
   store: StoreData,
   options: Options
 ): void => {
-  const config = options.config;
   const level: LogLevel = problem.status >= 500 ? "ERROR" : "WARNING";
   const rfcData = problem.toJSON();
   const data = {
@@ -73,17 +90,18 @@ export const handleHttpError = (
   };
 
   // 构建 console 消息
+  const { only: transportsOnly } = normalizeTransports(options.transports);
   let consoleMessage = "";
-  if (!(config?.useTransportsOnly || config?.disableInternalLogger)) {
+  if (!transportsOnly) {
     let timestamp = "";
-    if (config?.timestamp) {
+    if (options.format?.timestamp) {
       timestamp = `[${new Date().toISOString()}] `;
     }
     const pathname = store.pathname || new URL(request.url).pathname;
     consoleMessage = `${timestamp}${level} ${request.method} ${pathname} ${problem.status} - ${problem.title}`;
 
     // 详细错误日志
-    if (config?.error?.verboseErrorLogging) {
+    if (options.error?.verbose) {
       const parts = [consoleMessage];
       if (rfcData.detail) parts.push(`  Detail: ${rfcData.detail}`);
       if (rfcData.instance) parts.push(`  Instance: ${rfcData.instance}`);

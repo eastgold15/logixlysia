@@ -12,10 +12,9 @@ describe("logixlysia plugin", () => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -35,10 +34,9 @@ describe("logixlysia plugin", () => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -67,10 +65,9 @@ describe("logixlysia plugin", () => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -84,20 +81,17 @@ describe("logixlysia plugin", () => {
     expect(levels).toContain("ERROR");
   });
 
-  test("filters logs by level when logFilter is configured", async () => {
+  test("filters logs by level when logLevel is configured", async () => {
     const transport = mock<
       (lvl: unknown, msg: unknown, meta?: unknown) => void
     >(() => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        logFilter: {
-          level: ["ERROR", "WARNING"],
-        },
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      logLevel: ["ERROR", "WARNING"],
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -109,17 +103,16 @@ describe("logixlysia plugin", () => {
     expect(transport).toHaveBeenCalledTimes(0);
   });
 
-  test("allows all log levels when logFilter is not configured", async () => {
+  test("allows all log levels when logLevel is not configured", async () => {
     const transport = mock<
       (lvl: unknown, msg: unknown, meta?: unknown) => void
     >(() => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -140,13 +133,10 @@ describe("logixlysia plugin", () => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        logFilter: {
-          level: ["ERROR"],
-        },
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      logLevel: ["ERROR"],
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 
@@ -165,20 +155,17 @@ describe("logixlysia plugin", () => {
     expect(levelValue).toBe("ERROR");
   });
 
-  test("allows all levels when logFilter.level is empty", async () => {
+  test("allows all levels when logLevel is empty array", async () => {
     const transport = mock<
       (lvl: unknown, msg: unknown, meta?: unknown) => void
     >(() => {
       /* noop */
     });
     const options: Options = {
-      config: {
-        logFilter: {
-          level: [],
-        },
-        transports: [{ log: transport }],
-        disableInternalLogger: true,
-        disableFileLogging: true,
+      logLevel: [],
+      transports: {
+        targets: [{ log: transport }],
+        only: true,
       },
     };
 

@@ -24,7 +24,7 @@ describe("startServer", () => {
   test("renders simple message when configured", () => {
     const { spies, restore } = spyConsole(["log"]);
 
-    const options: Options = { config: { startupMessageFormat: "simple" } };
+    const options: Options = { startup: { format: "simple" } };
     startServer(
       { hostname: "localhost", port: 3000, protocol: "http" },
       options
@@ -40,10 +40,10 @@ describe("startServer", () => {
     restore();
   });
 
-  test("does nothing when showStartupMessage is false", () => {
+  test("does nothing when startup.show is false", () => {
     const { spies, restore } = spyConsole(["log"]);
 
-    const options: Options = { config: { showStartupMessage: false } };
+    const options: Options = { startup: { show: false } };
     startServer(
       { hostname: "localhost", port: 3000, protocol: "http" },
       options

@@ -52,7 +52,7 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
     name: "Logixlysia",
   });
 
-  const errorConfig = options.config?.error;
+  const errorConfig = options.error;
 
   return (
     app
@@ -131,16 +131,21 @@ export { normalizeToProblem } from "./utils/handle-error";
 // ==========================================
 
 export type {
+  ErrorConfig,
   ErrorMapping,
   ErrorResolver,
+  FileConfig,
+  FormatConfig,
   Logger,
   LogixlysiaContext,
   LogixlysiaStore,
   LogLevel,
   Options,
   Pino,
+  StartupConfig,
   StoreData,
   Transport,
+  TransportsConfig,
 } from "./interfaces";
 
 export default logixlysia;

@@ -1,16 +1,15 @@
-import type { LogLevel, Options, StoreData } from "../interfaces";
+import type { LogLevel, StoreData, Transport } from "../interfaces";
 
 interface LogToTransportsInput {
   data: Record<string, unknown>;
   level: LogLevel;
-  options: Options;
   request: Request;
   store: StoreData;
+  transports: Transport[];
 }
 
 export const logToTransports = (input: LogToTransportsInput): void => {
-  const { level, request, data, store, options } = input;
-  const transports = options.config?.transports ?? [];
+  const { level, request, data, store, transports } = input;
   if (transports.length === 0) {
     return;
   }

@@ -1,5 +1,5 @@
 import { describe, expect, mock, test } from "bun:test";
-import type { Options } from "../../src/interfaces";
+import type { Transport } from "../../src/interfaces";
 import { logToTransports } from "../../src/output";
 import { createMockRequest } from "../_helpers/request";
 
@@ -16,11 +16,7 @@ describe("logToTransports", () => {
       }
     );
 
-    const options: Options = {
-      config: {
-        transports: [{ log: t1 }, { log: t2 }],
-      },
-    };
+    const transports: Transport[] = [{ log: t1 }, { log: t2 }];
 
     const request = createMockRequest("http://localhost/hello");
     const store = { beforeTime: BigInt(0) };
@@ -30,7 +26,7 @@ describe("logToTransports", () => {
       request,
       data: { message: "Test message", status: 200 },
       store,
-      options,
+      transports,
     });
 
     expect(t1).toHaveBeenCalledTimes(1);
@@ -61,7 +57,6 @@ describe("logToTransports", () => {
       throw new Error("boom");
     });
 
-    const options: Options = { config: { transports: [{ log: throwing }] } };
     const request = createMockRequest("http://localhost/throw");
     const store = { beforeTime: BigInt(0) };
 
@@ -71,7 +66,7 @@ describe("logToTransports", () => {
         request,
         data: { message: "ignored" },
         store,
-        options,
+        transports: [{ log: throwing }],
       });
     }).not.toThrow();
   });
@@ -81,7 +76,6 @@ describe("logToTransports", () => {
       (lvl: unknown, msg: unknown, metaArg?: unknown) => Promise<void>
     >(() => Promise.reject(new Error("nope")));
 
-    const options: Options = { config: { transports: [{ log: rejecting }] } };
     const request = createMockRequest("http://localhost/reject");
     const store = { beforeTime: BigInt(0) };
 
@@ -90,7 +84,7 @@ describe("logToTransports", () => {
       request,
       data: { message: "async" },
       store,
-      options,
+      transports: [{ log: rejecting }],
     });
 
     // Let promise microtasks run; rejections should be caught internally.

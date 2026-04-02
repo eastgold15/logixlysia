@@ -47,14 +47,6 @@ export interface LogRotationConfig {
   maxSize?: string | number;
 }
 
-export interface LogFilter {
-  /**
-   * Array of log levels to allow. If specified, only logs with these levels will be processed.
-   * If not specified, all log levels will be allowed.
-   */
-  level?: LogLevel[];
-}
-
 // ==========================================
 // Error Mapping
 // ==========================================
@@ -74,77 +66,43 @@ export type ErrorResolver = (
 // Options
 // ==========================================
 
+export interface StartupConfig {
+  format?: "simple" | "banner";
+  show?: boolean;
+}
+
+export interface FormatConfig {
+  colors?: boolean;
+  showIp?: boolean;
+  template?: string;
+  timestamp?: string;
+}
+
+export interface FileConfig {
+  path: string;
+  rotation?: LogRotationConfig;
+}
+
+export interface TransportsConfig {
+  only?: boolean;
+  targets: Transport[];
+}
+
+export interface ErrorConfig {
+  errorMap?: Record<string, ErrorMapping>;
+  resolve?: ErrorResolver;
+  typeBaseUrl?: string;
+  verbose?: boolean;
+}
+
 export interface Options {
-  config?: {
-    showStartupMessage?: boolean;
-    startupMessageFormat?: "simple" | "banner";
-    useColors?: boolean;
-    ip?: boolean;
-    timestamp?: {
-      translateTime?: string;
-    };
-    customLogFormat?: string;
-
-    // Filtering
-    logFilter?: LogFilter;
-
-    // Outputs
-    transports?: Transport[];
-    useTransportsOnly?: boolean;
-    disableInternalLogger?: boolean;
-    disableFileLogging?: boolean;
-    logFilePath?: string;
-    logRotation?: LogRotationConfig;
-
-    // Pino
-    pino?: (PinoLoggerOptions & { prettyPrint?: boolean }) | undefined;
-
-    // Error handling
-    error?: {
-      /**
-       * 自定义错误类型的 Base URL
-       * @example "https://api.mysite.com/errors"
-       */
-      typeBaseUrl?: string;
-
-      /**
-       * 错误码映射表（Postgres / MySQL / 自定义错误码）
-       * 键为错误码字符串，值为 ProblemError 字段
-       *
-       * @example
-       * ```ts
-       * errorMap: {
-       *   '23505': { status: 409, title: 'Resource already exists', detail: 'Unique constraint violation' },
-       *   '23503': { status: 400, title: 'Foreign key constraint failed' },
-       *   'ER_DUP_ENTRY': { status: 409, title: 'Duplicate entry' },
-       * }
-       * ```
-       */
-      errorMap?: Record<string, ErrorMapping>;
-
-      /**
-       * 用户自定义错误解析回调
-       * 返回 ProblemError 表示已处理，返回 void 表示交给下一层
-       *
-       * @example
-       * ```ts
-       * resolve(error, { code, path }) {
-       *   if (isStripeError(error)) {
-       *     return createProblem(402, { detail: error.message })
-       *   }
-       *   // return void → 交给下一层
-       * }
-       * ```
-       */
-      resolve?: ErrorResolver;
-
-      /**
-       * 是否在控制台显示完整的错误详情（包括 detail 和 extensions）
-       * @default false
-       */
-      verboseErrorLogging?: boolean;
-    };
-  };
+  error?: ErrorConfig;
+  file?: false | FileConfig;
+  format?: FormatConfig;
+  logLevel?: LogLevel | LogLevel[];
+  pino?: PinoLoggerOptions;
+  startup?: StartupConfig;
+  transports?: Transport[] | TransportsConfig;
 }
 
 // ==========================================
