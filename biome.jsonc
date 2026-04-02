@@ -21,7 +21,8 @@
       "!.claude",
       "!scripts",
       "!**/scripts",
-      "!**/script"
+      "!**/script",
+      "!apps"
     ]
   },
   "linter": {
