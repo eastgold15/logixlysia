@@ -27,7 +27,9 @@ const outputPipeline = (
     const filePath = config?.logFilePath;
     if (filePath) {
       logToFile({ filePath, level, request, data, store, options }).catch(
-        () => {}
+        (e) => {
+          console.error(e);
+        }
       );
     }
   }

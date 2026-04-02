@@ -60,6 +60,7 @@
         "noUndeclaredEnvVars": "off"
       },
       "style": {
+        "useDefaultParameterLast": "off",
         "noMagicNumbers": "off",
         "useFilenamingConvention": "off",
         "noNonNullAssertion": "off",
