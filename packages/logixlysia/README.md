@@ -7,7 +7,7 @@
 ## `📩` Installation
 
 ```bash
-bun add logixlysia
+bun add @pori15/logixlysia
 ```
 
 ## `📝` Usage
