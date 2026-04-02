@@ -1,6 +1,6 @@
 import { appendFile } from "node:fs/promises";
 import { dirname } from "node:path";
-import type { LogLevel, Options, RequestInfo, StoreData } from "../interfaces";
+import type { LogLevel, Options, StoreData } from '../interfaces'
 import { ensureDir } from "./fs";
 import { performRotation, shouldRotate } from "./rotation-manager";
 
@@ -9,7 +9,7 @@ interface LogToFileInput {
   filePath: string;
   level: LogLevel;
   options: Options;
-  request: RequestInfo;
+  request: Request;
   store: StoreData;
 }
 
@@ -19,7 +19,7 @@ export const logToFile = async (
     | [
         string,
         LogLevel,
-        RequestInfo,
+        Request,
         Record<string, unknown>,
         StoreData,
         Options,
@@ -38,7 +38,7 @@ export const logToFile = async (
           ] = args as [
             string,
             LogLevel,
-            RequestInfo,
+            Request,
             Record<string, unknown>,
             StoreData,
             Options,

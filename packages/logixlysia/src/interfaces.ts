@@ -1,25 +1,23 @@
 import type {
   Logger as PinoLogger,
-  LoggerOptions as PinoLoggerOptions,
-} from "pino";
-import type { ProblemError } from "./Error/errors";
-import type { Code } from "./Error/type";
+  LoggerOptions as PinoLoggerOptions
+} from 'pino'
+import type { ProblemError } from './Error/errors'
+import type { Code } from './Error/type'
 
-export type Pino = PinoLogger<never, boolean>;
+export type Pino = PinoLogger<never, boolean>
 
-export type RequestInfo = Request;
-
-export type LogLevel = "DEBUG" | "INFO" | "WARNING" | "ERROR";
+export type LogLevel = 'DEBUG' | 'INFO' | 'WARNING' | 'ERROR'
 
 export interface StoreData {
-  beforeTime: bigint;
+  beforeTime: bigint
 }
 
 export interface LogixlysiaStore {
-  beforeTime?: bigint;
-  logger: Logger;
-  pino: Pino;
-  [key: string]: unknown;
+  beforeTime?: bigint
+  logger: Logger
+  pino: Pino
+  [key: string]: unknown
 }
 
 export interface Transport {
@@ -27,7 +25,7 @@ export interface Transport {
     level: LogLevel,
     message: string,
     meta?: Record<string, unknown>
-  ) => void | Promise<void>;
+  ) => void | Promise<void>
 }
 
 export interface LogRotationConfig {
@@ -48,94 +46,146 @@ export interface LogRotationConfig {
 }
 
 export interface LogFilter {
-  /**
+    /**
    * Array of log levels to allow. If specified, only logs with these levels will be processed.
    * If not specified, all log levels will be allowed.
    */
-  level?: LogLevel[];
+  level?: LogLevel[]
 }
+
+// ==========================================
+// Error Mapping
+// ==========================================
+
+export interface ErrorMapping {
+  status: number
+  title: string
+  detail?: string
+}
+
+export type ErrorResolver = (
+  error: unknown,
+  context: { code: Code; path: string; request: Request }
+) => ProblemError | void
+
+// ==========================================
+// Options
+// ==========================================
 
 export interface Options {
   config?: {
-    showStartupMessage?: boolean;
-    startupMessageFormat?: "simple" | "banner";
-    useColors?: boolean;
-    ip?: boolean;
+    showStartupMessage?: boolean
+    startupMessageFormat?: 'simple' | 'banner'
+    useColors?: boolean
+    ip?: boolean
     timestamp?: {
-      translateTime?: string;
-    };
-    customLogFormat?: string;
+      translateTime?: string
+    }
+    customLogFormat?: string
 
     // Filtering
-    logFilter?: LogFilter;
+    logFilter?: LogFilter
 
     // Outputs
-    transports?: Transport[];
-    useTransportsOnly?: boolean;
-    disableInternalLogger?: boolean;
-    disableFileLogging?: boolean;
-    logFilePath?: string;
-    logRotation?: LogRotationConfig;
+    transports?: Transport[]
+    useTransportsOnly?: boolean
+    disableInternalLogger?: boolean
+    disableFileLogging?: boolean
+    logFilePath?: string
+    logRotation?: LogRotationConfig
 
     // Pino
-    pino?: (PinoLoggerOptions & { prettyPrint?: boolean }) | undefined;
+    pino?: (PinoLoggerOptions & { prettyPrint?: boolean }) | undefined
 
+    // Error handling
     error?: {
-      problemJson?: {
-        typeBaseUrl?: string;
-      };
+      /**
+       * 自定义错误类型的 Base URL
+       * @example "https://api.mysite.com/errors"
+       */
+      typeBaseUrl?: string
+
+      /**
+       * 错误码映射表（Postgres / MySQL / 自定义错误码）
+       * 键为错误码字符串，值为 ProblemError 字段
+       *
+       * @example
+       * ```ts
+       * errorMap: {
+       *   '23505': { status: 409, title: 'Resource already exists', detail: 'Unique constraint violation' },
+       *   '23503': { status: 400, title: 'Foreign key constraint failed' },
+       *   'ER_DUP_ENTRY': { status: 409, title: 'Duplicate entry' },
+       * }
+       * ```
+       */
+      errorMap?: Record<string, ErrorMapping>
+
+      /**
+       * 用户自定义错误解析回调
+       * 返回 ProblemError 表示已处理，返回 void 表示交给下一层
+       *
+       * @example
+       * ```ts
+       * resolve(error, { code, path }) {
+       *   if (isStripeError(error)) {
+       *     return createProblem(402, { detail: error.message })
+       *   }
+       *   // return void → 交给下一层
+       * }
+       * ```
+       */
+      resolve?: ErrorResolver
+
       /**
        * 是否在控制台显示完整的错误详情（包括 detail 和 extensions）
-       * 开启后会将完整的错误对象打印到控制台，便于调试
        * @default false
        */
-      verboseErrorLogging?: boolean;
-    };
-  };
-
-  transform?: (
-    error: unknown,
-    context: { request: Request; code: Code; path: string }
-  ) => ProblemError | unknown;
+      verboseErrorLogging?: boolean
+    }
+  }
 }
 
+// ==========================================
+// Logger
+// ==========================================
+
 export interface Logger {
-  debug: (
-    request: Request,
-    message: string,
-    context?: Record<string, unknown>
-  ) => void;
-  error: (
-    request: Request,
-    message: string,
-    context?: Record<string, unknown>
-  ) => void;
-  handleHttpError: (
-    request: Request,
-    error: ProblemError,
-    store: StoreData,
-    options: Options
-  ) => void;
-  info: (
-    request: Request,
-    message: string,
-    context?: Record<string, unknown>
-  ) => void;
+  pino: Pino
   log: (
     level: LogLevel,
     request: Request,
     data: Record<string, unknown>,
     store: StoreData
-  ) => void;
-  pino: Pino;
+  ) => void
+  handleHttpError: (
+    request: Request,
+    error: ProblemError,
+    store: StoreData,
+    options: Options
+  ) => void
+  debug: (
+    request: Request,
+    message: string,
+    context?: Record<string, unknown>
+  ) => void
+  info: (
+    request: Request,
+    message: string,
+    context?: Record<string, unknown>
+  ) => void
   warn: (
     request: Request,
     message: string,
     context?: Record<string, unknown>
-  ) => void;
+  ) => void
+  error: (
+    request: Request,
+    message: string,
+    context?: Record<string, unknown>
+  ) => void
 }
 
 export interface LogixlysiaContext {
-  request: Request;
-  store: LogixlysiaStore;
+  request: Request
+  store: LogixlysiaStore
 }

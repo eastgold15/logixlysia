@@ -1,17 +1,17 @@
-import { Elysia, type SingletonBase } from "elysia";
-import { startServer } from "./extensions";
-import type { LogixlysiaStore, Options } from "./interfaces";
-import { createLogger } from "./logger";
-import { normalizeToProblem } from "./utils/handle-error";
+import { Elysia, type SingletonBase } from 'elysia'
+import { startServer } from './extensions'
+import type { LogixlysiaStore, Options } from './interfaces'
+import { createLogger } from './logger'
+import { normalizeToProblem } from './utils/handle-error'
 
 export type Logixlysia = Elysia<
-  "Logixlysia",
+  'Logixlysia',
   SingletonBase & { store: LogixlysiaStore }
->;
+>
 
 export const logixlysia = (options: Options = {}): Logixlysia => {
-  const didCustomLog = new WeakSet<Request>();
-  const baseLogger = createLogger(options);
+  const didCustomLog = new WeakSet<Request>()
+  const baseLogger = createLogger(options)
   const logger = {
     ...baseLogger,
     debug: (
@@ -19,129 +19,119 @@ export const logixlysia = (options: Options = {}): Logixlysia => {
       message: string,
       context?: Record<string, unknown>
     ) => {
-      didCustomLog.add(request);
-      baseLogger.debug(request, message, context);
+      didCustomLog.add(request)
+      baseLogger.debug(request, message, context)
     },
     info: (
       request: Request,
       message: string,
       context?: Record<string, unknown>
     ) => {
-      didCustomLog.add(request);
-      baseLogger.info(request, message, context);
+      didCustomLog.add(request)
+      baseLogger.info(request, message, context)
     },
     warn: (
       request: Request,
       message: string,
       context?: Record<string, unknown>
     ) => {
-      didCustomLog.add(request);
-      baseLogger.warn(request, message, context);
+      didCustomLog.add(request)
+      baseLogger.warn(request, message, context)
     },
     error: (
       request: Request,
       message: string,
       context?: Record<string, unknown>
     ) => {
-      didCustomLog.add(request);
-      baseLogger.error(request, message, context);
-    },
-  };
+      didCustomLog.add(request)
+      baseLogger.error(request, message, context)
+    }
+  }
 
   const app = new Elysia({
-    name: "Logixlysia",
+    name: 'Logixlysia',
     detail: {
       description:
-        "Logixlysia is a plugin for Elysia that provides a logger and pino logger.",
-      tags: ["logging", "pino"],
-    },
-  });
+        'Logixlysia is a plugin for Elysia that provides a logger and pino logger.',
+      tags: ['logging', 'pino']
+    }
+  })
+
+  const errorConfig = options.config?.error
 
   return (
     app
-      .state("logger", logger)
-      .state("pino", logger.pino)
-      .state("beforeTime", BigInt(0))
+      .state('logger', logger)
+      .state('pino', logger.pino)
+      .state('beforeTime', BigInt(0))
       .onStart(({ server }) => {
         if (server) {
-          startServer(server, options);
+          startServer(server, options)
         }
       })
       .onRequest(({ store }) => {
-        store.beforeTime = process.hrtime.bigint();
+        store.beforeTime = process.hrtime.bigint()
       })
       .onAfterHandle(({ request, set, store }) => {
         if (didCustomLog.has(request)) {
-          return;
+          return
         }
 
-        const status = typeof set.status === "number" ? set.status : 200;
-        let level: "INFO" | "WARNING" | "ERROR" = "INFO";
+        const status = typeof set.status === 'number' ? set.status : 200
+        let level: 'INFO' | 'WARNING' | 'ERROR' = 'INFO'
         if (status >= 500) {
-          level = "ERROR";
+          level = 'ERROR'
         } else if (status >= 400) {
-          level = "WARNING";
+          level = 'WARNING'
         }
 
-        logger.log(level, request, { status }, store);
+        logger.log(level, request, { status }, store)
       })
       .onError(({ request, error, code, path, store, set }) => {
-        // logger.handleHttpError(request, error, store)
+        // ① 分层解析为 ProblemError
+        const problem = normalizeToProblem(error, code, path, {
+          typeBaseUrl: errorConfig?.typeBaseUrl,
+          errorMap: errorConfig?.errorMap,
+          resolve: errorConfig?.resolve,
+          request
+        })
 
-        // ==========================================
-        // Phase 1: Transform (转换)
-        // ==========================================
-        const result = options.transform
-          ? options.transform(error, { request, code, path })
-          : error;
+        // ② 打印日志
+        logger.handleHttpError(request, problem, store, options)
 
-        // ==========================================
-        // Phase 2: Normalization (规范化)
-        // ==========================================
-        // 统一转为 ProblemError 实例
-        const problem = normalizeToProblem(
-          result,
-          code,
-          path,
-          options.config?.error?.problemJson?.typeBaseUrl
-        );
-
-        // ==========================================
-        // Phase 3: Logging (日志)
-        // ==========================================
-        // 调用上面改造后的函数，它现在只负责记录，不负责逻辑判断
-        logger.handleHttpError(request, problem, store, options);
-
-        // ==========================================
-        // Phase 4: Response (响应)
-        // ==========================================
-        // 统一设置 Header 和 Status
-        set.status = problem.status;
-        set.headers["content-type"] = "application/problem+json";
-
-        // 返回符合 RFC 标准的 JSON
-        return problem.toJSON();
+        // ③ 返回 RFC 9457 响应
+        set.status = problem.status
+        set.headers['content-type'] = 'application/problem+json'
+        return problem.toJSON()
       })
-      // Ensure plugin lifecycle hooks (onRequest/onAfterHandle/onError) apply to the parent app.
-      .as("scoped") as unknown as Logixlysia
-  );
-};
+      // Ensure plugin lifecycle hooks apply to the parent app.
+      .as('scoped') as unknown as Logixlysia
+  )
+}
 
 // ==========================================
 // Error Exports
 // ==========================================
 
-export type { ProblemDocument } from "./Error/errors";
-export * from "./Error/errors";
-export type {
-  Code,
-  ErrorContext,
-  HttpProblemJsonOptions,
-} from "./Error/type";
+export { createProblem } from './Error/errors'
+export type { HttpErrorConstructor, ProblemConfig, ProblemDocument } from './Error/errors'
+export * from './Error/errors'
+export type { Code } from './Error/type'
+
 // ==========================================
-// Core Exports
+// Utils Exports
 // ==========================================
+
+export { normalizeToProblem } from './utils/handle-error'
+export { getErrorCode } from './utils/get-error-code'
+
+// ==========================================
+// Interface Exports
+// ==========================================
+
 export type {
+  ErrorMapping,
+  ErrorResolver,
   Logger,
   LogixlysiaContext,
   LogixlysiaStore,
@@ -149,16 +139,7 @@ export type {
   Options,
   Pino,
   StoreData,
-  Transport,
-} from "./interfaces";
-export type {
-  ProblemJson,
-  ProblemJsonOptions,
-} from "./utils/handle-error";
-export {
-  formatProblemJsonLog,
-  normalizeToProblem,
-  toProblemJson,
-} from "./utils/handle-error";
+  Transport
+} from './interfaces'
 
-export default logixlysia;
+export default logixlysia

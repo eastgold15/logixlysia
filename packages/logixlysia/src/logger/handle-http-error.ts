@@ -1,7 +1,7 @@
-import type { ProblemError } from "../Error/errors";
-import type { LogLevel, Options, StoreData } from "../interfaces";
-import { logToTransports } from "../output";
-import { logToFile } from "../output/file";
+import type { ProblemError } from '../Error/errors'
+import type { LogLevel, Options, StoreData } from '../interfaces'
+import { logToTransports } from '../output'
+import { logToFile } from '../output/file'
 
 export const handleHttpError = (
   request: Request,
@@ -9,84 +9,65 @@ export const handleHttpError = (
   store: StoreData,
   options: Options
 ): void => {
-  const config = options.config;
-  // 1. 准备日志数据：将 RFC 标准字段与日志元数据合并
-  const level: LogLevel = "ERROR";
-  const rfcData = problem.toJSON();
+  const config = options.config
+
+  // 日志级别：4xx = WARNING，5xx = ERROR
+  const level: LogLevel = problem.status >= 500 ? 'ERROR' : 'WARNING'
+
+  // 1. 准备日志数据
+  const rfcData = problem.toJSON()
   const data = {
     status: problem.status,
     message: problem.detail || problem.title,
-    ...rfcData,
-  };
-  // 2. 阶段：传输层 (Transports)
-  logToTransports({ level, request, data, store, options });
-  // 3. 阶段：持久化 (File Logging)
-  // 匹配你的接口：useTransportsOnly 和 disableFileLogging 直接在 config 下
+    ...rfcData
+  }
+
+  // 2. Transports
+  logToTransports({ level, request, data, store, options })
+
+  // 3. File Logging
   if (!(config?.useTransportsOnly || config?.disableFileLogging)) {
-    const filePath = config?.logFilePath;
+    const filePath = config?.logFilePath
     if (filePath) {
-      logToFile({ filePath, level, request, data, store, options }).catch(
-        () => {}
-      );
+      logToFile({ filePath, level, request, data, store, options }).catch(() => {})
     }
   }
 
-  // 4. 阶段：控制台输出 (Console/Internal)
-  if (config?.useTransportsOnly || config?.disableInternalLogger) return;
+  // 4. Console
+  if (config?.useTransportsOnly || config?.disableInternalLogger) return
 
-  // 处理时间戳显示逻辑
-  let timestamp = "";
+  let timestamp = ''
   if (config?.timestamp) {
-    timestamp = `[${new Date().toISOString()}] `;
+    timestamp = `[${new Date().toISOString()}] `
   }
 
-  // 1. 安全提取 Method 和 Path
-  const method = typeof request === "string" ? "REQ" : request.method;
-  const urlString = typeof request === "string" ? request : request.url;
-
-  let path: string;
-  try {
-    // 如果是完整 URL 则提取 pathname，如果是相对路径则直接使用
-    path = urlString.includes("://") ? new URL(urlString).pathname : urlString;
-  } catch {
-    path = urlString;
-  }
-
-  // 2. 语义化终端打印
-  // 现在的代码对 string 和 Request 类型都百分之百安全了
+  const pathname = new URL(request.url).pathname
   console.error(
-    `${timestamp}${level} ${method} ${path} ${problem.status} - ${problem.title}`
-  );
+    `${timestamp}${level} ${request.method} ${pathname} ${problem.status} - ${problem.title}`
+  )
 
-  // 如果启用了详细错误日志，打印完整的错误信息
+  // 详细错误日志
   if (config?.error?.verboseErrorLogging) {
-    const json = problem.toJSON();
+    const json = problem.toJSON()
 
-    // 打印 detail
     if (json.detail) {
-      console.error(`  Detail: ${json.detail}`);
+      console.error(`  Detail: ${json.detail}`)
     }
-
-    // 打印 instance
     if (json.instance) {
-      console.error(`  Instance: ${json.instance}`);
+      console.error(`  Instance: ${json.instance}`)
+    }
+    if (json.type && json.type !== 'about:blank') {
+      console.error(`  Type: ${json.type}`)
     }
 
-    // 打印 type
-    if (json.type && json.type !== "about:blank") {
-      console.error(`  Type: ${json.type}`);
-    }
-
-    // 打印扩展字段（如 validation errors）
     const extensions = Object.entries(json).filter(
-      ([key]) =>
-        !["type", "title", "status", "detail", "instance"].includes(key)
-    );
+      ([key]) => !['type', 'title', 'status', 'detail', 'instance'].includes(key)
+    )
     if (extensions.length > 0) {
-      console.error("  Extensions:");
+      console.error('  Extensions:')
       for (const [key, value] of extensions) {
-        console.error(`    ${key}:`, value);
+        console.error(`    ${key}:`, value)
       }
     }
   }
-};
+}

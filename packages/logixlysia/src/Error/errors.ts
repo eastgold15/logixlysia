@@ -1,62 +1,52 @@
-// src/libs/elysia-http-problem-json/errors.ts
+// RFC 9457 Problem Details - https://www.rfc-editor.org/rfc/rfc9457.html
 
 export interface ProblemDocument {
-  detail?: string;
-  instance?: string;
-  status?: number;
-  title: string;
-  type: string;
-  [key: string]: unknown;
+  type: string
+  title: string
+  status?: number
+  detail?: string
+  instance?: string
+  [key: string]: unknown
 }
 
 /**
- * RFC 9457 Problem Details Error Base Class
+ * RFC 9457 Problem Details Error
  *
- * Core members as per RFC 9457:
- * - type: A URI reference [RFC3986] that identifies the problem type.
- *         Defaults to "about:blank" when omitted.
- * - title: A short, human-readable summary of the problem type.
- * - status: The HTTP status code ([RFC7231], Section 6).
- * - detail: A human-readable explanation specific to this occurrence of the problem.
- * - instance: A URI reference that identifies the specific occurrence of the problem.
- *
- * Extension members: Additional properties can be added to provide more context.
- * These are serialized as-is in the JSON response.
- */
-/**
- * RFC 9457 Error Base Class
- * * 修改思路：直接使用 public readonly 属性，拒绝嵌套，拒绝 Getter。
+ * Core members:
+ * - type: URI reference identifying the problem type (default "about:blank")
+ * - title: Short human-readable summary
+ * - status: HTTP status code
+ * - detail: Human-readable explanation for this occurrence
+ * - instance: URI reference identifying this specific occurrence
+ * - extensions: Additional properties serialized as-is
  */
 export class ProblemError extends Error {
-  // 1. 直接声明公开属性
-  public readonly status: number;
-  public readonly title: string;
-  public readonly type: string;
-  public readonly detail?: string;
-  public readonly instance?: string;
-  public readonly extensions?: Record<string, unknown>;
+  public readonly status: number
+  public readonly title: string
+  public readonly type: string
+  public readonly detail?: string
+  public readonly instance?: string
+  public readonly extensions?: Record<string, unknown>
 
   constructor(
-    type = "about:blank",
+    type = 'about:blank',
     title: string,
     status: number,
     detail?: string,
     instance?: string,
-    extensions: Record<string, unknown> = {}
+    extensions?: Record<string, unknown>
   ) {
-    super(detail || title);
-    Object.setPrototypeOf(this, ProblemError.prototype);
+    super(detail || title)
+    Object.setPrototypeOf(this, ProblemError.prototype)
 
-    // 2. 直接赋值给 this
-    this.status = status;
-    this.title = title;
-    this.type = type;
-    this.detail = detail;
-    this.instance = instance;
-    this.extensions = extensions;
+    this.status = status
+    this.title = title
+    this.type = type
+    this.detail = detail
+    this.instance = instance
+    this.extensions = extensions
   }
 
-  // 3. toJSON 的时候动态组装一下即可
   toJSON(): ProblemDocument {
     return {
       type: this.type,
@@ -64,211 +54,103 @@ export class ProblemError extends Error {
       status: this.status,
       ...(this.detail ? { detail: this.detail } : {}),
       ...(this.instance ? { instance: this.instance } : {}),
-      // 把扩展字段展开 (extensions)
-      ...this.extensions,
-    };
+      ...this.extensions
+    }
   }
 }
 
-// --- 40X Errors ---
-class BadRequest extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/400",
-      "Bad Request",
-      400,
-      detail,
-      undefined,
-      extensions
-    );
-  }
+// ==========================================
+// Factory Function
+// ==========================================
+
+const DEFAULT_TITLES: Record<number, string> = {
+  400: 'Bad Request',
+  401: 'Unauthorized',
+  402: 'Payment Required',
+  403: 'Forbidden',
+  404: 'Not Found',
+  405: 'Method Not Allowed',
+  406: 'Not Acceptable',
+  409: 'Conflict',
+  500: 'Internal Server Error',
+  501: 'Not Implemented',
+  502: 'Bad Gateway',
+  503: 'Service Unavailable',
+  504: 'Gateway Timeout'
 }
 
-class Unauthorized extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/401",
-      "Unauthorized",
-      401,
-      detail,
-      undefined,
-      extensions
-    );
-  }
+export interface ProblemConfig {
+  title?: string
+  detail?: string
+  type?: string
+  instance?: string
+  extensions?: Record<string, unknown>
 }
 
-class Forbidden extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/403",
-      "Forbidden",
-      403,
-      detail,
-      undefined,
-      extensions
-    );
-  }
+/**
+ * 工厂函数：根据 HTTP 状态码快速创建 ProblemError
+ *
+ * @example
+ * throw createProblem(400, { detail: 'Invalid email' })
+ * throw createProblem(409, { title: 'Duplicate', detail: 'Email already exists' })
+ */
+export const createProblem = (
+  status: number,
+  overrides?: ProblemConfig
+): ProblemError => {
+  const title = overrides?.title ?? DEFAULT_TITLES[status] ?? 'Unknown Error'
+  return new ProblemError(
+    overrides?.type ?? `https://httpstatuses.com/${status}`,
+    title,
+    status,
+    overrides?.detail,
+    overrides?.instance,
+    overrides?.extensions
+  )
 }
 
-class NotFound extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/404",
-      "Not Found",
-      404,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
+// ==========================================
+// HttpError Namespace (convenience wrappers via createProblem)
+// ==========================================
 
-class Conflict extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/409",
-      "Conflict",
-      409,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
+type HttpErrorFactory = (
+  detail?: string,
+  extensions?: Record<string, unknown>
+) => ProblemError
 
-class PaymentRequired extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/402",
-      "Payment Required",
-      402,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
-
-class MethodNotAllowed extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/405",
-      "Method Not Allowed",
-      405,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
-
-class NotAcceptable extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/406",
-      "Not Acceptable",
-      406,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
-
-// 50X Errors
-class InternalServerError extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/500",
-      "Internal Server Error",
-      500,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
-
-class NotImplemented extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/501",
-      "Not Implemented",
-      501,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
-
-class BadGateway extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/502",
-      "Bad Gateway",
-      502,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
-
-class ServiceUnavailable extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/503",
-      "Service Unavailable",
-      503,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
-
-class GatewayTimeout extends ProblemError {
-  constructor(detail?: string, extensions?: Record<string, any>) {
-    super(
-      "https://httpstatuses.com/504",
-      "Gateway Timeout",
-      504,
-      detail,
-      undefined,
-      extensions
-    );
-  }
-}
+const factory =
+  (status: number): HttpErrorFactory =>
+  (detail, extensions) =>
+    createProblem(status, { detail, extensions })
 
 export interface HttpErrorConstructor {
-  BadGateway: typeof BadGateway;
-  BadRequest: typeof BadRequest;
-  Conflict: typeof Conflict;
-  Forbidden: typeof Forbidden;
-  GatewayTimeout: typeof GatewayTimeout;
-  InternalServerError: typeof InternalServerError;
-  MethodNotAllowed: typeof MethodNotAllowed;
-  NotAcceptable: typeof NotAcceptable;
-  NotFound: typeof NotFound;
-  NotImplemented: typeof NotImplemented;
-  PaymentRequired: typeof PaymentRequired;
-  ServiceUnavailable: typeof ServiceUnavailable;
-  Unauthorized: typeof Unauthorized;
+  BadRequest: HttpErrorFactory
+  Unauthorized: HttpErrorFactory
+  PaymentRequired: HttpErrorFactory
+  Forbidden: HttpErrorFactory
+  NotFound: HttpErrorFactory
+  MethodNotAllowed: HttpErrorFactory
+  NotAcceptable: HttpErrorFactory
+  Conflict: HttpErrorFactory
+  InternalServerError: HttpErrorFactory
+  NotImplemented: HttpErrorFactory
+  BadGateway: HttpErrorFactory
+  ServiceUnavailable: HttpErrorFactory
+  GatewayTimeout: HttpErrorFactory
 }
 
 export const HttpError: HttpErrorConstructor = {
-  BadRequest,
-  Unauthorized,
-  PaymentRequired,
-  Forbidden,
-  NotFound,
-  MethodNotAllowed,
-  NotAcceptable,
-  Conflict,
-  InternalServerError,
-  NotImplemented,
-  BadGateway,
-  ServiceUnavailable,
-  GatewayTimeout,
-};
+  BadRequest: factory(400),
+  Unauthorized: factory(401),
+  PaymentRequired: factory(402),
+  Forbidden: factory(403),
+  NotFound: factory(404),
+  MethodNotAllowed: factory(405),
+  NotAcceptable: factory(406),
+  Conflict: factory(409),
+  InternalServerError: factory(500),
+  NotImplemented: factory(501),
+  BadGateway: factory(502),
+  ServiceUnavailable: factory(503),
+  GatewayTimeout: factory(504)
+}
