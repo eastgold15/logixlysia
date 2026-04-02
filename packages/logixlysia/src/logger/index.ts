@@ -17,12 +17,18 @@ export const createLogger = (options: Options = {}): Logger => {
   const pinoOptions = options.pino ?? {};
   const isPrettyPrint = pinoOptions.transport === undefined;
 
-  const pinoLogger: Pino = isPrettyPrint
-    ? pino({
-        ...pinoOptions,
-        level: pinoOptions.level ?? "info",
-        messageKey: pinoOptions.messageKey,
-        errorKey: pinoOptions.errorKey,
+  const basePinoOptions = {
+    ...pinoOptions,
+    level: pinoOptions.level ?? "info",
+    messageKey: pinoOptions.messageKey,
+    errorKey: pinoOptions.errorKey,
+  };
+
+  const createPinoLogger = (): Pino => {
+    if (!isPrettyPrint) return pino(basePinoOptions);
+    try {
+      return pino({
+        ...basePinoOptions,
         transport: {
           target: "pino-pretty",
           options: {
@@ -32,13 +38,13 @@ export const createLogger = (options: Options = {}): Logger => {
             errorKey: pinoOptions.errorKey,
           },
         },
-      })
-    : pino({
-        ...pinoOptions,
-        level: pinoOptions.level ?? "info",
-        messageKey: pinoOptions.messageKey,
-        errorKey: pinoOptions.errorKey,
       });
+    } catch {
+      return pino(basePinoOptions);
+    }
+  };
+
+  const pinoLogger = createPinoLogger();
 
   const log = (
     level: LogLevel,
