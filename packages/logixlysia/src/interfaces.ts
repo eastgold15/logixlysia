@@ -4,6 +4,7 @@ import type {
 } from "pino";
 import type { ProblemError } from "./error/errors";
 import type { Code } from "./error/type";
+import type { ErrorMeta } from "./utils/get-error-code";
 
 /** Pino Logger 实例类型 */
 export type Pino = PinoLogger<never, boolean>;
@@ -64,8 +65,8 @@ export interface LogRotationConfig {
 
 /** 错误码到 HTTP 响应的映射条目 */
 export interface ErrorMapping {
-  /** 错误详情描述 */
-  detail?: string;
+  /** 错误详情，支持静态文案或根据数据库错误元数据动态生成 */
+  detail?: string | ((meta: ErrorMeta) => string);
   /** HTTP 状态码 */
   status: number;
   /** 错误标题 */

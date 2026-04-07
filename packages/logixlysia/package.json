@@ -1,9 +1,14 @@
 {
   "name": "@pori15/logixlysia",
-  "version": "6.0.13",
+  "version": "6.0.15",
   "description": "🦊 Logixlysia is a logger for Elysia",
   "type": "module",
-  "main": "dist/index.js",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
   "files": [
     "src",
     "dist",

@@ -17,7 +17,7 @@ import {
 } from "../error/errors";
 import type { Code } from "../error/type";
 import type { ErrorMapping, ErrorResolver } from "../interfaces";
-import { getErrorCode } from "./get-error-code";
+import { getErrorCode, getErrorMeta } from "./get-error-code";
 
 // Layer 5: Elysia 内置错误码映射
 const CODE_MAP: Record<
@@ -98,15 +98,19 @@ export const normalizeToProblem = (
   }
 
   // ==========================================
-  // Layer 4: errorMap 查表（递归 getErrorCode）
+  // Layer 4: errorMap 查表（递归 getErrorCode / getErrorMeta）
   // ==========================================
   if (errorMap) {
     const errorCode = getErrorCode(error);
     if (errorCode && errorCode in errorMap) {
       const mapping = errorMap[errorCode];
+      const detail =
+        typeof mapping.detail === "function"
+          ? mapping.detail(getErrorMeta(error) ?? { code: errorCode })
+          : mapping.detail;
       return createProblem(mapping.status, {
         title: mapping.title,
-        detail: mapping.detail,
+        detail,
         type: buildType(errorCode),
         instance: path,
       });

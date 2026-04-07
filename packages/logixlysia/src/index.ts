@@ -123,7 +123,8 @@ export type { Code } from "./error/type";
 // Utils Exports
 // ==========================================
 
-export { getErrorCode } from "./utils/get-error-code";
+export type { ErrorMeta } from "./utils/get-error-code";
+export { getErrorCode, getErrorMeta } from "./utils/get-error-code";
 export { normalizeToProblem } from "./utils/handle-error";
 
 // ==========================================
